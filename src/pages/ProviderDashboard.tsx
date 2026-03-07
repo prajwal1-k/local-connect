@@ -93,7 +93,7 @@ export default function ProviderDashboard() {
     }
   };
 
-  const updateRequestStatus = async (id: string, status: string) => {
+  const updateRequestStatus = async (id: string, status: "pending" | "accepted" | "rejected" | "completed" | "cancelled") => {
     await supabase.from("service_requests").update({ status }).eq("id", id);
     toast({ title: `Request ${status}` });
     fetchAll();
