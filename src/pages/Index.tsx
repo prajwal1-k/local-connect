@@ -1,14 +1,234 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Search, ArrowRight, Star, CheckCircle, Clock, Shield, Home, Sparkles, SprayCan, Settings, Monitor, Paintbrush, Truck, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+const iconMap: Record<string, React.ReactNode> = {
+  home: <Home className="h-8 w-8" />,
+  sparkles: <Sparkles className="h-8 w-8" />,
+  "spray-can": <SprayCan className="h-8 w-8" />,
+  settings: <Settings className="h-8 w-8" />,
+  monitor: <Monitor className="h-8 w-8" />,
+  paintbrush: <Paintbrush className="h-8 w-8" />,
+  truck: <Truck className="h-8 w-8" />,
+  "book-open": <BookOpen className="h-8 w-8" />,
+  wrench: <Settings className="h-8 w-8" />,
 };
 
-export default Index;
+const steps = [
+  { icon: <Search className="h-10 w-10" />, title: "Search", desc: "Find the service you need from our wide range of categories" },
+  { icon: <CheckCircle className="h-10 w-10" />, title: "Book", desc: "Send a request to a trusted professional near you" },
+  { icon: <Star className="h-10 w-10" />, title: "Get Service", desc: "Get quality service at your doorstep and rate the experience" },
+];
+
+export default function Index() {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const { user, role } = useAuth();
+
+  useEffect(() => {
+    supabase.from("categories").select("*").then(({ data }) => setCategories(data || []));
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) navigate(`/services?search=${encodeURIComponent(searchQuery)}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
+              <span className="text-lg font-bold text-primary-foreground">K</span>
+            </div>
+            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              KodeQuantum
+            </span>
+          </Link>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}>Dashboard</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/services">Browse Services</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild><Link to="/login">Log in</Link></Button>
+                <Button asChild><Link to="/signup">Get Started</Link></Button>
+              </>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="relative overflow-hidden py-20 md:py-32">
+        <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
+        <div className="container mx-auto px-4 text-center">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+              Trusted by 10,000+ users
+            </span>
+            <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+              Find Trusted <span className="gradient-primary bg-clip-text text-transparent">Local Services</span> Near You
+            </h1>
+            <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
+              Connect with verified professionals for home services, beauty, IT support, and more. Quality service at your doorstep.
+            </p>
+          </motion.div>
+
+          <motion.form
+            onSubmit={handleSearch}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mx-auto flex max-w-lg gap-2"
+          >
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search for plumber, electrician, tutor..."
+                className="h-12 pl-10 text-base shadow-card"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button type="submit" size="lg" className="h-12 px-6 gradient-primary border-0">
+              Search
+            </Button>
+          </motion.form>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 text-3xl font-bold tracking-tight">Popular Services</h2>
+            <p className="text-muted-foreground">Browse from our wide range of professional services</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {categories.map((cat, i) => (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+              >
+                <Link to={`/services?category=${cat.id}`}>
+                  <Card className="group cursor-pointer border-0 shadow-card transition-all hover:shadow-elevated hover:-translate-y-1">
+                    <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:gradient-primary group-hover:text-primary-foreground">
+                        {iconMap[cat.icon] || <Settings className="h-8 w-8" />}
+                      </div>
+                      <h3 className="font-semibold">{cat.name}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{cat.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="border-y border-border bg-muted/50 py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 text-3xl font-bold tracking-tight">How It Works</h2>
+            <p className="text-muted-foreground">Get started in 3 simple steps</p>
+          </div>
+          <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-3">
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
+                className="flex flex-col items-center text-center"
+              >
+                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl gradient-primary text-primary-foreground">
+                  {step.icon}
+                </div>
+                <span className="mb-1 text-sm font-medium text-primary">Step {i + 1}</span>
+                <h3 className="mb-2 text-xl font-bold">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust section */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
+            {[
+              { icon: <Shield className="h-7 w-7" />, title: "Verified Professionals", desc: "All service providers are verified and trusted" },
+              { icon: <Clock className="h-7 w-7" />, title: "Quick Response", desc: "Get responses within minutes from nearby pros" },
+              { icon: <Star className="h-7 w-7" />, title: "Rated & Reviewed", desc: "Choose based on real customer ratings and reviews" },
+            ].map((item, i) => (
+              <Card key={i} className="border-0 shadow-card">
+                <CardContent className="flex items-start gap-4 p-6">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h3 className="mb-1 font-semibold">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-2xl rounded-2xl gradient-primary p-10 text-center text-primary-foreground md:p-16">
+            <h2 className="mb-4 text-3xl font-bold">Ready to Get Started?</h2>
+            <p className="mb-8 opacity-90">Join thousands of happy customers and trusted service providers</p>
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Button size="lg" variant="secondary" asChild>
+                <Link to="/signup">Sign Up as Customer <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" asChild>
+                <Link to="/signup?role=provider">Join as Provider</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border py-10">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground md:flex-row">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md gradient-primary">
+              <span className="text-sm font-bold text-primary-foreground">K</span>
+            </div>
+            <span className="font-semibold text-foreground">KodeQuantum Local Services</span>
+          </div>
+          <p>© 2026 KodeQuantum. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
