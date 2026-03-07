@@ -1,0 +1,205 @@
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Star, MapPin, Clock, Calendar, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+
+export default function ServiceDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user, role } = useAuth();
+  const [service, setService] = useState<any>(null);
+  const [provider, setProvider] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingDesc, setBookingDesc] = useState("");
+  const [bookingAddress, setBookingAddress] = useState("");
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    fetchData();
+  }, [id]);
+
+  const fetchData = async () => {
+    const { data: svc } = await supabase.from("services").select("*, categories(name)").eq("id", id!).single();
+    if (!svc) { setLoading(false); return; }
+    setService(svc);
+
+    const [{ data: prof }, { data: revs }] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", svc.provider_id).single(),
+      supabase.from("reviews").select("*, profiles!reviews_reviewer_id_fkey(full_name)").eq("provider_id", svc.provider_id),
+    ]);
+    setProvider(prof);
+    setReviews(revs || []);
+    setLoading(false);
+  };
+
+  const handleBooking = async () => {
+    if (!user || !service) return;
+    if (!bookingDesc.trim() || !bookingAddress.trim()) {
+      toast({ title: "Please fill required fields", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("service_requests").insert({
+      taker_id: user.id,
+      provider_id: service.provider_id,
+      service_id: service.id,
+      description: bookingDesc.trim(),
+      address: bookingAddress.trim(),
+      preferred_date: bookingDate || null,
+      preferred_time: bookingTime || null,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({ title: "Booking failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Request sent!", description: "The provider will respond to your request shortly." });
+      setBookingOpen(false);
+      setBookingDesc("");
+      setBookingAddress("");
+    }
+  };
+
+  const avgRating = reviews.length ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;
+
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
+  if (!service) return <div className="flex min-h-screen items-center justify-center"><p>Service not found</p></div>;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+        <div className="container mx-auto flex h-16 items-center gap-4 px-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+          <span className="font-bold">Service Details</span>
+        </div>
+      </nav>
+
+      <div className="container mx-auto max-w-3xl px-4 py-8">
+        <Card className="mb-6 border-0 shadow-elevated">
+          <CardContent className="p-8">
+            <Badge variant="secondary" className="mb-3">{(service.categories as any)?.name}</Badge>
+            <h1 className="mb-2 text-3xl font-bold">{service.title}</h1>
+            <p className="mb-6 text-muted-foreground">{service.description}</p>
+
+            <div className="mb-6 flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-primary">₹{service.price}</span>
+                <span className="text-sm text-muted-foreground">/ {service.price_type}</span>
+              </div>
+              {service.experience_years ? (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" /> {service.experience_years} years exp.
+                </div>
+              ) : null}
+              {avgRating > 0 && (
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-accent text-accent" />
+                  <span className="font-medium">{avgRating}</span>
+                  <span className="text-sm text-muted-foreground">({reviews.length} reviews)</span>
+                </div>
+              )}
+            </div>
+
+            {/* Provider info */}
+            {provider && (
+              <div className="mb-6 rounded-xl border border-border p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full gradient-primary text-primary-foreground font-bold text-lg">
+                    {provider.full_name?.[0]?.toUpperCase() || "P"}
+                  </div>
+                  <div>
+                    <p className="font-semibold">{provider.full_name}</p>
+                    {provider.location && (
+                      <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <MapPin className="h-3 w-3" /> {provider.location}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {provider.bio && <p className="mt-3 text-sm text-muted-foreground">{provider.bio}</p>}
+              </div>
+            )}
+
+            {/* Book button */}
+            {user && role === "service_taker" ? (
+              <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="w-full gradient-primary border-0">
+                    <Send className="mr-2 h-4 w-4" /> Request This Service
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Book: {service.title}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label>Describe your requirement *</Label>
+                      <Textarea placeholder="What do you need help with?" value={bookingDesc} onChange={(e) => setBookingDesc(e.target.value)} maxLength={500} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Your address *</Label>
+                      <Input placeholder="Full address" value={bookingAddress} onChange={(e) => setBookingAddress(e.target.value)} maxLength={200} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Preferred date</Label>
+                        <Input type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Preferred time</Label>
+                        <Input type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} />
+                      </div>
+                    </div>
+                    <Button className="w-full gradient-primary border-0" onClick={handleBooking} disabled={submitting}>
+                      {submitting ? "Sending..." : "Send Request"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            ) : !user ? (
+              <Button size="lg" className="w-full" asChild>
+                <Link to="/login">Log in to Book</Link>
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        {/* Reviews */}
+        {reviews.length > 0 && (
+          <Card className="border-0 shadow-card">
+            <CardHeader><CardTitle>Reviews ({reviews.length})</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              {reviews.map((r) => (
+                <div key={r.id} className="border-b border-border pb-4 last:border-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} className={`h-4 w-4 ${s <= r.rating ? "fill-accent text-accent" : "text-muted"}`} />
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium">{(r as any).profiles?.full_name || "Customer"}</span>
+                  </div>
+                  {r.comment && <p className="text-sm text-muted-foreground">{r.comment}</p>}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
