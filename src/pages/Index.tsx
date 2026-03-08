@@ -67,17 +67,25 @@ export default function Index() {
             </Link>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            {user && (
-              <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"} className="text-sm font-medium px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors">
-                Dashboard
-              </Link>
+            {user ? (
+              <>
+                <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"} className="text-sm font-medium px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors">
+                  Dashboard
+                </Link>
+                <Button variant="outline" size="sm" onClick={() => signOut()} className="text-sm font-semibold">
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-sm font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                  Log in
+                </Link>
+                <Link to="/signup" className="text-sm font-semibold px-3 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors">
+                  Get Started
+                </Link>
+              </>
             )}
-            <Link to="/login" className="text-sm font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-              Log in
-            </Link>
-            <Link to="/signup" className="text-sm font-semibold px-3 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors">
-              Get Started
-            </Link>
           </div>
           <div className="flex items-center gap-3">
             {/* Mobile Menu Button */}
