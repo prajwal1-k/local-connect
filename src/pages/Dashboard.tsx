@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Clock, CheckCircle, XCircle, LogOut, MapPin, Calendar } from "lucide-react";
+import { Star, Clock, CheckCircle, XCircle, LogOut, MapPin, Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +101,14 @@ export default function Dashboard() {
       </nav>
 
       <div className="container mx-auto max-w-3xl px-4 py-8">
+        <div className="mb-4">
+          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowRight className="h-4 w-4 rotate-180" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Welcome, {profile?.full_name || "User"} 👋</h1>
           <p className="text-muted-foreground">Manage your service requests</p>

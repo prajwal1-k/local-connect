@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, ArrowRight, Star, CheckCircle, Clock, Shield, Home, Sparkles, SprayCan, Settings, Monitor, Paintbrush, Truck, BookOpen } from "lucide-react";
+import { Search, ArrowRight, Star, CheckCircle, Clock, Shield, Home, Sparkles, SprayCan, Settings, Monitor, Paintbrush, Truck, BookOpen, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +29,7 @@ const steps = [
 export default function Index() {
   const [categories, setCategories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, role } = useAuth();
 
@@ -54,36 +55,116 @@ export default function Index() {
               KodeQuantum
             </span>
           </Link>
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}>Dashboard</Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link to="/services">Browse Services</Link>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" asChild><Link to="/login">Log in</Link></Button>
-                <Button asChild><Link to="/signup">Get Started</Link></Button>
-              </>
+          <div className="hidden md:flex items-center gap-6">
+            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Home
+            </Link>
+            <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Services
+            </Link>
+            <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              About Us
+            </Link>
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+            {user && (
+              <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"} className="text-sm font-medium px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors">
+                Dashboard
+              </Link>
             )}
+            <Link to="/login" className="text-sm font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+              Log in
+            </Link>
+            <Link to="/signup" className="text-sm font-semibold px-3 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors">
+              Get Started
+            </Link>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-t border-border bg-background/95 backdrop-blur-lg"
+          >
+            <div className="container mx-auto px-4 py-4 space-y-3">
+              <Link
+                to="/"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Home className="h-4 w-4" />
+                Home
+              </Link>
+              <Link
+                to="/about"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <BookOpen className="h-4 w-4" />
+                About Us
+              </Link>
+              <Link
+                to="/services"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Search className="h-4 w-4" />
+                Browse Services
+              </Link>
+              <Link
+                to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Settings className="h-4 w-4" />
+                Dashboard
+              </Link>
+              <div className="pt-2 mt-3 border-t border-border/50">
+                <Link
+                  to="/login"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  Log in
+                </Link>
+                <Link
+                  to="/signup"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors shadow-sm mt-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Star className="h-4 w-4" />
+                  Get Started
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </nav>
 
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
-        <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
               Trusted by 10,000+ users
             </span>
             <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              Find Trusted <span className="gradient-primary bg-clip-text text-transparent">Local Services</span> Near You
+              Find Trusted <span>Local Services</span> Near You
             </h1>
             <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
               Connect with verified professionals for home services, beauty, IT support, and more. Quality service at your doorstep.
@@ -146,7 +227,7 @@ export default function Index() {
       </section>
 
       {/* How it works */}
-      <section className="border-y border-border bg-muted/50 py-16 md:py-24">
+      <section className="bg-muted/50 py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-3xl font-bold tracking-tight">How It Works</h2>
@@ -209,7 +290,7 @@ export default function Index() {
               <Button size="lg" variant="secondary" asChild>
                 <Link to="/signup">Sign Up as Customer <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" asChild>
+              <Button size="lg" className="gradient-primary border-0 text-primary-foreground hover:opacity-90" asChild>
                 <Link to="/signup?role=provider">Join as Provider</Link>
               </Button>
             </div>
