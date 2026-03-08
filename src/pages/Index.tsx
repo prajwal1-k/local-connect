@@ -31,7 +31,7 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user, role, signOut } = useAuth();
 
   useEffect(() => {
     supabase.from("categories").select("*").then(({ data }) => setCategories(data || []));
@@ -67,17 +67,25 @@ export default function Index() {
             </Link>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            {user && (
-              <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"} className="text-sm font-medium px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors">
-                Dashboard
-              </Link>
+            {user ? (
+              <>
+                <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"} className="text-sm font-medium px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors">
+                  Dashboard
+                </Link>
+                <Button variant="outline" size="sm" onClick={() => signOut()} className="text-sm font-semibold">
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-sm font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                  Log in
+                </Link>
+                <Link to="/signup" className="text-sm font-semibold px-3 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors">
+                  Get Started
+                </Link>
+              </>
             )}
-            <Link to="/login" className="text-sm font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-              Log in
-            </Link>
-            <Link to="/signup" className="text-sm font-semibold px-3 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors">
-              Get Started
-            </Link>
           </div>
           <div className="flex items-center gap-3">
             {/* Mobile Menu Button */}
@@ -125,31 +133,46 @@ export default function Index() {
                 <Search className="h-4 w-4" />
                 Browse Services
               </Link>
-              <Link
-                to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Settings className="h-4 w-4" />
-                Dashboard
-              </Link>
+              {user && (
+                <Link
+                  to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Settings className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              )}
               <div className="pt-2 mt-3 border-t border-border/50">
-                <Link
-                  to="/login"
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <ArrowRight className="h-4 w-4" />
-                  Log in
-                </Link>
-                <Link
-                  to="/signup"
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors shadow-sm mt-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Star className="h-4 w-4" />
-                  Get Started
-                </Link>
+                {user ? (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 text-sm font-semibold"
+                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    Log out
+                  </Button>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                      Log in
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors shadow-sm mt-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Star className="h-4 w-4" />
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
