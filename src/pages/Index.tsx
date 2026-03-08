@@ -133,31 +133,46 @@ export default function Index() {
                 <Search className="h-4 w-4" />
                 Browse Services
               </Link>
-              <Link
-                to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Settings className="h-4 w-4" />
-                Dashboard
-              </Link>
+              {user && (
+                <Link
+                  to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Settings className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              )}
               <div className="pt-2 mt-3 border-t border-border/50">
-                <Link
-                  to="/login"
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <ArrowRight className="h-4 w-4" />
-                  Log in
-                </Link>
-                <Link
-                  to="/signup"
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors shadow-sm mt-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Star className="h-4 w-4" />
-                  Get Started
-                </Link>
+                {user ? (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 text-sm font-semibold"
+                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    Log out
+                  </Button>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                      Log in
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors shadow-sm mt-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Star className="h-4 w-4" />
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
