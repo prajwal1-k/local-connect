@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { QRCodeCanvas } from "qrcode.react";
+import { Copy } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -109,6 +111,13 @@ export default function ProviderDashboard() {
   const activeReqs = requests.filter(r => r.status === "accepted");
   const pastReqs = requests.filter(r => ["completed", "rejected", "cancelled"].includes(r.status));
   const avgRating = reviews.length ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;
+
+  const shareUrl = `${window.location.origin}/provider/${user?.id}`;
+
+  const copyLink = () => {
+  navigator.clipboard.writeText(shareUrl);
+  toast({ title: "Link copied!" });
+};
 
   return (
     <div className="min-h-screen bg-background">
@@ -274,6 +283,38 @@ export default function ProviderDashboard() {
               </div>
             )}
           </TabsContent>
+
+          {/* <Card className="mb-6 border-0 shadow-card">
+            <CardHeader>
+              <CardTitle>Share Your Services</CardTitle>
+            </CardHeader>
+
+            <CardContent className="flex flex-col mb-6 border-0 shadow-card">
+                {/* QR Code */}
+    {/* <div className="p-3 bg-white rounded-lg border">
+      <QRCodeCanvas value={shareUrl} size={140} />
+    </div> */}
+
+    {/* Link Section */}
+    {/* <div className="flex-1 space-y-2">
+      <p className="text-sm text-muted-foreground">
+        Share this link or QR code with customers so they can book your services.
+      </p>
+
+      <div className="flex gap-2">
+        <Input value={shareUrl} readOnly />
+        <Button variant="outline" onClick={copyLink}>
+          <Copy className="h-4 w-4 mr-1" />
+          Copy
+        </Button>
+      </div>
+    </div>
+
+  </CardContent>
+</Card> */}
+
+
+
 
           <TabsContent value="reviews">
             {reviews.length === 0 ? (

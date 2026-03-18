@@ -14,6 +14,8 @@ import ProviderDashboard from "./pages/ProviderDashboard";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
+
+
 const queryClient = new QueryClient();
 
 const App = () => (
