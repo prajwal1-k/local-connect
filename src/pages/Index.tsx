@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import HomeCarousel from "@/components/HomeCarousel";
+import GrowSection from "@/components/GrowSection";
 
 const iconMap: Record<string, React.ReactNode> = {
   home: <Home className="h-8 w-8" />,
