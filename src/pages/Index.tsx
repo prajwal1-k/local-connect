@@ -55,7 +55,7 @@ export default function Index() {
               <span className="text-lg font-bold text-primary-foreground">K</span>
             </div>
             <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              KodeQuantum
+              LocalConnect
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
@@ -66,7 +66,10 @@ export default function Index() {
               Services
             </Link>
             <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              About Us
+              About
+            </Link>
+            <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Contact
             </Link>
           </div>
           <div className="hidden md:flex items-center gap-3">
@@ -126,13 +129,22 @@ export default function Index() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <BookOpen className="h-4 w-4" />
-                About Us
+                About
+              </Link>
+              <Link
+                to="/contact"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <BookOpen className="h-4 w-4" />
+                Contact
               </Link>
               <Link
                 to="/services"
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
+
                 <Search className="h-4 w-4" />
                 Browse Services
               </Link>
@@ -333,18 +345,90 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-10">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground md:flex-row">
+{/* Footer */}
+<footer className="relative mt-20">
+  {/* Glass Container */}
+  <div className="backdrop-blur-xl bg-white/5 dark:bg-white/5 border-t border-white/10">
+    <div className="container mx-auto px-4 py-10 sm:py-12">
+      
+      {/* Top Section */}
+      <div className="grid grid-cols-1 gap-10 text-center sm:text-left md:grid-cols-3">
+        
+        {/* Brand */}
+        <div className="flex flex-col items-center sm:items-start gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">K</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/80 to-primary shadow-lg">
+              <span className="text-sm font-bold text-white">K</span>
             </div>
-            <span className="font-semibold text-foreground">KodeQuantum Local Services</span>
+            <span className="text-lg font-semibold text-foreground">
+              KodeQuantum
+            </span>
           </div>
-          <p>© 2026 KodeQuantum. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Smart local services platform connecting you with trusted professionals near you.
+          </p>
         </div>
-      </footer>
+
+        {/* Links */}
+        <div className="flex flex-col items-center sm:items-start gap-2">
+          <h4 className="font-semibold text-foreground mb-2">Quick Links</h4>
+          {["Home", "Services", "About", "Contact"].map((item) => (
+            <a
+              key={item}
+              href="#"
+              className="relative group py-1 text-muted-foreground transition-colors"
+            >
+              <span className="group-hover:text-foreground">{item}</span>
+              <span className="absolute left-0 bottom-0 h-[1px] w-0 bg-primary transition-all group-hover:w-full"></span>
+            </a>
+          ))}
+        </div>
+
+        {/* Social */}
+        <div className="flex flex-col items-center sm:items-start gap-4">
+          <h4 className="font-semibold text-foreground">Connect</h4>
+
+          <div className="flex gap-4">
+            {["🌐", "🐦", "💼", "📸"].map((icon, i) => (
+              <a
+                key={i}
+                href="#"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 hover:scale-110 transition-all shadow-sm"
+              >
+                {icon}
+              </a>
+            ))}
+          </div>
+
+          <p className="text-sm text-muted-foreground text-center sm:text-left">
+            support@kodequantum.com
+          </p>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="my-8 border-t border-white/10" />
+
+      {/* Bottom */}
+      <div className="flex flex-col items-center gap-4 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+        <p>© 2026 KodeQuantum. All rights reserved.</p>
+
+        <div className="flex flex-wrap justify-center gap-4">
+          <a href="#" className="hover:text-foreground transition-colors">
+            Privacy Policy
+          </a>
+          <a href="#" className="hover:text-foreground transition-colors">
+            Terms of Service
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Glow Effect */}
+  <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-primary/10 via-transparent to-transparent blur-2xl"></div>
+</footer>
     </div>
   );
 }
+

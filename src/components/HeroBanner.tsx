@@ -32,7 +32,7 @@ export default function HeroBanner() {
             </div>
 
             <h2 className="mb-3 text-3xl font-bold leading-tight text-white md:text-5xl" style={{ lineHeight: 1.1 }}>
-              Grow Your Business with KodeQuantum
+              Grow Your Business with LocalConnect
             </h2>
             <p className="mb-6 max-w-md text-sm text-white/75 md:text-base">
               Whether you're a service provider looking to expand or a customer seeking quality — KodeQuantum connects you instantly.
