@@ -182,6 +182,9 @@ export default function Index() {
         )}
       </nav>
 
+      {/* Top Banner Ad */}
+      <HeroBanner />
+
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
         <div className="container mx-auto px-4 text-center">
