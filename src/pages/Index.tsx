@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeCarousel from "@/components/HomeCarousel";
 import GrowSection from "@/components/GrowSection";
+import HeroBanner from "@/components/HeroBanner";
 
 const iconMap: Record<string, React.ReactNode> = {
   home: <Home className="h-8 w-8" />,
@@ -180,6 +181,9 @@ export default function Index() {
           </motion.div>
         )}
       </nav>
+
+      {/* Top Banner Ad */}
+      <HeroBanner />
 
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
