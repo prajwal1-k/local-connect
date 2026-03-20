@@ -251,6 +251,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Photo Carousel */}
+      <HomeCarousel />
+
       {/* How it works */}
       <section className="bg-muted/50 py-16 md:py-24">
         <div className="container mx-auto px-4">
