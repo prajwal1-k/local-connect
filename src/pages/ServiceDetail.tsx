@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, MapPin, Clock, Calendar, Send } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Clock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +26,10 @@ export default function ServiceDetail() {
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -73,6 +77,56 @@ export default function ServiceDetail() {
     }
   };
 
+  const handleReviewSubmit = async () => {
+    if (!user || !service) return;
+    setSubmittingReview(true);
+
+    // Find a completed request by this user for this service
+    const { data: completedRequests } = await supabase
+      .from("service_requests")
+      .select("id")
+      .eq("taker_id", user.id)
+      .eq("service_id", service.id)
+      .eq("status", "completed")
+      .limit(1);
+
+    if (!completedRequests || completedRequests.length === 0) {
+      toast({ title: "You need a completed booking with this service before leaving a review.", variant: "destructive" });
+      setSubmittingReview(false);
+      return;
+    }
+
+    const { data: existingReview } = await supabase
+      .from("reviews")
+      .select("id")
+      .eq("request_id", completedRequests[0].id)
+      .eq("reviewer_id", user.id)
+      .maybeSingle();
+
+    if (existingReview) {
+      toast({ title: "You already reviewed this service.", variant: "destructive" });
+      setSubmittingReview(false);
+      return;
+    }
+
+    const { error } = await supabase.from("reviews").insert({
+      request_id: completedRequests[0].id,
+      reviewer_id: user.id,
+      provider_id: service.provider_id,
+      rating: reviewRating,
+      comment: reviewComment.trim(),
+    });
+    setSubmittingReview(false);
+    if (error) {
+      toast({ title: "Failed to submit review", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Review submitted!" });
+      setReviewComment("");
+      setReviewRating(5);
+      fetchData();
+    }
+  };
+
   const avgRating = reviews.length ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;
 
   if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
@@ -113,7 +167,6 @@ export default function ServiceDetail() {
               )}
             </div>
 
-            {/* Provider info */}
             {provider && (
               <div className="mb-6 rounded-xl border border-border p-4">
                 <div className="flex items-center gap-3">
@@ -133,7 +186,6 @@ export default function ServiceDetail() {
               </div>
             )}
 
-            {/* Book button */}
             {user && role === "service_taker" ? (
               <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
                 <DialogTrigger asChild>
@@ -178,12 +230,37 @@ export default function ServiceDetail() {
           </CardContent>
         </Card>
 
-        {/* Reviews */}
-        {reviews.length > 0 && (
-          <Card className="border-0 shadow-card">
-            <CardHeader><CardTitle>Reviews ({reviews.length})</CardTitle></CardHeader>
+        {/* Write a Review */}
+        {user && role === "service_taker" && (
+          <Card className="mb-6 border-0 shadow-card">
+            <CardHeader><CardTitle>Write a Review</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              {reviews.map((r) => (
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button key={s} onClick={() => setReviewRating(s)} className="transition-transform hover:scale-110">
+                    <Star className={`h-7 w-7 ${s <= reviewRating ? "fill-accent text-accent" : "text-muted"}`} />
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <Label>Your review</Label>
+                <Textarea placeholder="Share your experience..." value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} maxLength={500} />
+              </div>
+              <Button className="gradient-primary border-0" onClick={handleReviewSubmit} disabled={submittingReview}>
+                {submittingReview ? "Submitting..." : "Submit Review"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Reviews list */}
+        <Card className="border-0 shadow-card">
+          <CardHeader><CardTitle>Reviews ({reviews.length})</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            {reviews.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No reviews yet. Be the first to review!</p>
+            ) : (
+              reviews.map((r) => (
                 <div key={r.id} className="border-b border-border pb-4 last:border-0">
                   <div className="flex items-center gap-2 mb-1">
                     <div className="flex">
@@ -195,10 +272,10 @@ export default function ServiceDetail() {
                   </div>
                   {r.comment && <p className="text-sm text-muted-foreground">{r.comment}</p>}
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+              ))
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
