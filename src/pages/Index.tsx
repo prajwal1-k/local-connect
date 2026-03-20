@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import HomeCarousel from "@/components/HomeCarousel";
+import GrowSection from "@/components/GrowSection";
 
 const iconMap: Record<string, React.ReactNode> = {
   home: <Home className="h-8 w-8" />,
@@ -249,6 +251,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Photo Carousel */}
+      <HomeCarousel />
+
       {/* How it works */}
       <section className="bg-muted/50 py-16 md:py-24">
         <div className="container mx-auto px-4">
@@ -302,6 +307,9 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Grow Section */}
+      <GrowSection />
 
       {/* CTA */}
       <section className="py-16 md:py-24">
