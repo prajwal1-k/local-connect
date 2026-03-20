@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeCarousel from "@/components/HomeCarousel";
+import HeroServicesCarousel from "@/components/HeroServicesCarousel";
 import GrowSection from "@/components/GrowSection";
 import HeroBanner from "@/components/HeroBanner";
 
@@ -199,39 +200,47 @@ export default function Index() {
 
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-              Trusted by 10,000+ users
-            </span>
-            <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              Find Trusted <span>Local Services</span> Near You
-            </h1>
-            <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
-              Connect with verified professionals for home services, beauty, IT support, and more. Quality service at your doorstep.
-            </p>
-          </motion.div>
+        <div className="container mx-auto px-4">
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            <div className="text-center md:text-left">
+              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+                <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+                  Trusted by 10,000+ users
+                </span>
+                <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold leading-tight tracking-tight md:mx-0 md:text-6xl">
+                  Find Trusted <span>Local Services</span> Near You
+                </h1>
+                <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground md:mx-0">
+                  Connect with verified professionals for home services, beauty, IT support, and more. Quality service at your doorstep.
+                </p>
+              </motion.div>
 
-          <motion.form
-            onSubmit={handleSearch}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto flex max-w-lg gap-2"
-          >
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search for plumber, electrician, tutor..."
-                className="h-12 pl-10 text-base shadow-card"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <motion.form
+                onSubmit={handleSearch}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="mx-auto flex max-w-lg gap-2 md:mx-0"
+              >
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search for plumber, electrician, tutor..."
+                    className="h-12 pl-10 text-base shadow-card"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" size="lg" className="h-12 px-6 gradient-primary border-0">
+                  Search
+                </Button>
+              </motion.form>
             </div>
-            <Button type="submit" size="lg" className="h-12 px-6 gradient-primary border-0">
-              Search
-            </Button>
-          </motion.form>
+
+            <div>
+              <HeroServicesCarousel />
+            </div>
+          </div>
         </div>
       </section>
 
