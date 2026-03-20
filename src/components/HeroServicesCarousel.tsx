@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import slideRepairs from "@/assets/b2b.jpeg";
 import slideB2B from "@/assets/it-consultant.jpeg";
 import slideDoctors from "@/assets/home-service.jpeg";
-import { Button } from "@/components/ui/button";
 
 type Slide = {
   image: string;
@@ -28,11 +26,6 @@ export default function HeroServicesCarousel() {
   const next = useCallback(() => {
     setDirection(1);
     setCurrent((prev) => (prev + 1) % slides.length);
-  }, [slides.length]);
-
-  const prev = useCallback(() => {
-    setDirection(-1);
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
   }, [slides.length]);
 
   useEffect(() => {
@@ -72,41 +65,6 @@ export default function HeroServicesCarousel() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </motion.div>
         </AnimatePresence>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={prev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/35 h-10 w-10"
-          aria-label="Previous slide"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={next}
-          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/35 h-10 w-10"
-          aria-label="Next slide"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-
-        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setDirection(i > current ? 1 : -1);
-                setCurrent(i);
-              }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === current ? "w-6 bg-white" : "w-2 bg-white/50"
-              }`}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );

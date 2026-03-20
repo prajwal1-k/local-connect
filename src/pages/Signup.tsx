@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Eye, EyeOff, User, Briefcase } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, User, Briefcase } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -47,8 +47,14 @@ export default function Signup() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4 py-8">
       <div className="absolute inset-0 gradient-primary opacity-[0.02]" />
+      <Button variant="ghost" asChild className="absolute left-4 top-4 z-20 text-muted-foreground hover:text-foreground">
+        <Link to="/" className="flex items-center gap-2">
+          <ArrowRight className="h-4 w-4 rotate-180" />
+          Back to Home
+        </Link>
+      </Button>
       <Card className="relative z-10 w-full max-w-md border-0 shadow-elevated">
         <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
