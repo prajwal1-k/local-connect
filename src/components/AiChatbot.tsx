@@ -1,145 +1,169 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bot, MessageSquare, Send, X } from "lucide-react";
+import { Bot, MessageSquare, Send, X, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-};
+type Msg = { role: "user" | "assistant"; content: string };
 
-function makeId() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-function getIntentAndReply(raw: string) {
-  const text = raw.toLowerCase().trim();
+const SUGGESTIONS = [
+  "What services do you offer?",
+  "How does LocalConnect work?",
+  "How do I become a provider?",
+  "Contact support",
+];
 
-  const matchesAny = (patterns: RegExp[]) => patterns.some((p) => p.test(text));
+async function streamChat({
+  messages,
+  onDelta,
+  onDone,
+  onError,
+}: {
+  messages: Msg[];
+  onDelta: (t: string) => void;
+  onDone: () => void;
+  onError: (msg: string) => void;
+}) {
+  const resp = await fetch(CHAT_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ messages }),
+  });
 
-  // Intents
-  const contact = matchesAny([/contact/, /help/, /support/, /email/, /gmail/, /reach out/]);
-  const services = matchesAny([/service/, /services/, /plumber/, /electrician/, /clean/, /health/, /doctor/, /real estate/, /b2b/]);
-  const howItWorks = matchesAny([/how it works/, /steps/, /book/, /request/, /rate/, /verified/]);
-  const login = matchesAny([/login/, /log in/, /sign in/]);
-  const signup = matchesAny([/signup/, /sign up/, /register/]);
-
-  if (howItWorks) {
-    return {
-      intent: "how",
-      reply:
-        "Here’s how LocalConnect works:\n\n1) Search services and choose a category\n2) Send a request to a verified professional\n3) Get service at your doorstep and rate your experience",
-    };
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    onError(body.error || "Something went wrong");
+    return;
+  }
+  if (!resp.body) {
+    onError("No response body");
+    return;
   }
 
-  if (services) {
-    return {
-      intent: "services",
-      reply:
-        "We offer categories like home repairs, cleaning services, B2B solutions, healthcare, and real estate.\n\nTell me what you need (e.g., plumber, cleaning, IT support) and I’ll guide you to the right place.",
-    };
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  let done = false;
+
+  while (!done) {
+    const { done: rd, value } = await reader.read();
+    if (rd) break;
+    buf += decoder.decode(value, { stream: true });
+
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) !== -1) {
+      let line = buf.slice(0, nl);
+      buf = buf.slice(nl + 1);
+      if (line.endsWith("\r")) line = line.slice(0, -1);
+      if (line.startsWith(":") || !line.trim()) continue;
+      if (!line.startsWith("data: ")) continue;
+
+      const json = line.slice(6).trim();
+      if (json === "[DONE]") { done = true; break; }
+
+      try {
+        const parsed = JSON.parse(json);
+        const c = parsed.choices?.[0]?.delta?.content as string | undefined;
+        if (c) onDelta(c);
+      } catch {
+        buf = line + "\n" + buf;
+        break;
+      }
+    }
   }
 
-  if (contact) {
-    return {
-      intent: "contact",
-      reply:
-        "You can reach us anytime via the Contact page. We usually respond within 24 hours on weekdays.\n\nEmail: kodequantum@gmail.com\n\nIf you want, go to `Contact` and send your message.",
-    };
+  // flush
+  if (buf.trim()) {
+    for (let raw of buf.split("\n")) {
+      if (!raw) continue;
+      if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+      if (!raw.startsWith("data: ")) continue;
+      const json = raw.slice(6).trim();
+      if (json === "[DONE]") continue;
+      try {
+        const p = JSON.parse(json);
+        const c = p.choices?.[0]?.delta?.content;
+        if (c) onDelta(c);
+      } catch { /* skip */ }
+    }
   }
 
-  if (login) {
-    return {
-      intent: "auth",
-      reply:
-        "To log in, open the Login page and enter your email + password. If you don’t have an account yet, you can sign up instead.",
-    };
-  }
-
-  if (signup) {
-    return {
-      intent: "auth",
-      reply:
-        "To create an account, open the Signup page. You can sign up as a customer or as a service provider.",
-    };
-  }
-
-  // Default help
-  return {
-    intent: "general",
-    reply:
-      "Hi! I’m your LocalConnect assistant.\n\nAsk me about services, how it works, or how to contact support.",
-  };
+  onDone();
 }
 
 export default function AiChatbot() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
-  const [lastIntent, setLastIntent] = useState<string>("general");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: makeId(),
-      role: "assistant",
-      content: "Hi! How can I help you today with LocalConnect?",
-    },
+  const [messages, setMessages] = useState<Msg[]>([
+    { role: "assistant", content: "Hi! 👋 I'm the **LocalConnect AI Assistant**. How can I help you today?" },
   ]);
-  const [isThinking, setIsThinking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!open) return;
-    // Focus input after opening
-    const t = window.setTimeout(() => inputRef.current?.focus(), 150);
-    return () => window.clearTimeout(t);
+    if (open) {
+      const t = setTimeout(() => inputRef.current?.focus(), 150);
+      return () => clearTimeout(t);
+    }
   }, [open]);
 
   useEffect(() => {
-    // Keep the latest message visible
     if (!open) return;
     const el = listRef.current;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [open, messages.length, isThinking]);
-
-  const suggestions = useMemo(
-    () => ["Find services", "How it works", "Contact support", "How do I become a provider"],
-    [],
-  );
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [open, messages]);
 
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || isThinking) return;
-
+    if (!trimmed || isStreaming) return;
     setDraft("");
-    setIsThinking(true);
+    setIsStreaming(true);
 
-    const userMsg: ChatMessage = { id: makeId(), role: "user", content: trimmed };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMsg: Msg = { role: "user", content: trimmed };
+    const updated = [...messages, userMsg];
+    setMessages(updated);
 
-    const { intent, reply } = getIntentAndReply(trimmed);
-    setLastIntent(intent);
+    let assistantSoFar = "";
 
-    // Simulate an AI response delay
-    window.setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: makeId(),
-          role: "assistant",
-          content: reply,
+    const upsert = (chunk: string) => {
+      assistantSoFar += chunk;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && prev.length === updated.length + 1) {
+          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+        }
+        return [...prev, { role: "assistant", content: assistantSoFar }];
+      });
+    };
+
+    try {
+      await streamChat({
+        messages: updated,
+        onDelta: upsert,
+        onDone: () => setIsStreaming(false),
+        onError: (msg) => {
+          toast.error(msg);
+          setIsStreaming(false);
         },
-      ]);
-      setIsThinking(false);
-    }, 650);
+      });
+    } catch {
+      toast.error("Failed to connect to AI");
+      setIsStreaming(false);
+    }
   };
 
   return (
@@ -147,125 +171,102 @@ export default function AiChatbot() {
       {!open ? (
         <Button
           onClick={() => setOpen(true)}
-          className="fixed bottom-4 right-4 z-50 h-12 gap-2 rounded-full gradient-primary border-0 px-4"
+          className="fixed bottom-4 right-4 z-50 h-12 gap-2 rounded-full gradient-primary border-0 px-4 shadow-lg"
         >
-          <MessageSquare className="h-5 w-5 text-primary-foreground" />
-          <span className="text-sm font-semibold text-primary-foreground">Chat</span>
+          <Sparkles className="h-5 w-5 text-primary-foreground" />
+          <span className="text-sm font-semibold text-primary-foreground">AI Chat</span>
         </Button>
       ) : (
-        <div className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[380px]">
-          <Card className="overflow-hidden border-border/60 bg-background/80 backdrop-blur-xl shadow-elevated">
-            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+        <div className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[400px]">
+          <Card className="overflow-hidden border-border/60 bg-background/90 backdrop-blur-xl shadow-elevated flex flex-col" style={{ height: "520px" }}>
+            {/* Header */}
+            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold leading-none">LocalConnect Assistant</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Usually replies in seconds</p>
+                  <p className="text-sm font-semibold leading-none">LocalConnect AI</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {isStreaming ? "Typing..." : "Powered by AI"}
+                  </p>
                 </div>
               </div>
-
               <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setOpen(false)} aria-label="Close chat">
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="px-4 py-3">
-              <div className="flex flex-wrap gap-2">
-                {suggestions.map((s) => (
-                  <Button
-                    key={s}
-                    variant="secondary"
-                    size="sm"
-                    className="h-8 rounded-full border-border/60 bg-accent/10 px-3 text-xs hover:bg-accent/20"
-                    onClick={() => send(s)}
-                  >
-                    {s}
-                  </Button>
-                ))}
-              </div>
-
-              {(lastIntent === "services" || lastIntent === "general") && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 rounded-full border-border/60"
-                    onClick={() => navigate("/services")}
-                  >
-                    Browse Services
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 rounded-full border-border/60"
-                    asChild
-                  >
-                    <Link to="/contact">Contact Us</Link>
-                  </Button>
-                </div>
-              )}
-
-              {lastIntent === "contact" && (
-                <div className="mt-3 flex">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 rounded-full border-border/60"
-                    asChild
-                  >
-                    <Link to="/contact">Open Contact Page</Link>
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            <ScrollArea className="h-[320px]">
-              <div
-                ref={listRef}
-                className={cn("space-y-3 px-4 pb-4 pt-2", messages.length === 0 ? "hidden" : "")}
-              >
-                {messages.map((m) => (
-                  <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+            {/* Messages */}
+            <ScrollArea className="flex-1 min-h-0">
+              <div ref={listRef} className="space-y-3 px-4 pb-4 pt-3">
+                {messages.map((m, i) => (
+                  <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                     <div
                       className={cn(
-                        "max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm",
+                        "max-w-[85%] rounded-2xl px-3 py-2 text-sm",
                         m.role === "user"
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted/60 text-foreground border border-border/60",
+                          : "bg-muted/60 text-foreground border border-border/60"
                       )}
                     >
-                      {m.content}
+                      {m.role === "assistant" ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
+                          <ReactMarkdown>{m.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        m.content
+                      )}
                     </div>
                   </div>
                 ))}
 
-                {isThinking && (
+                {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
                   <div className="flex justify-start">
                     <div className="max-w-[85%] rounded-2xl bg-muted/60 px-3 py-2 text-sm text-muted-foreground border border-border/60">
-                      Thinking...
+                      <span className="animate-pulse">Thinking…</span>
                     </div>
                   </div>
                 )}
               </div>
             </ScrollArea>
 
+            {/* Quick suggestions */}
+            {messages.length <= 2 && !isStreaming && (
+              <div className="px-4 pb-2 flex flex-wrap gap-1.5 shrink-0">
+                {SUGGESTIONS.map((s) => (
+                  <Button
+                    key={s}
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 rounded-full bg-accent/10 px-2.5 text-xs hover:bg-accent/20"
+                    onClick={() => send(s)}
+                  >
+                    {s}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {/* Input */}
             <form
-              className="flex items-center gap-2 border-t border-border/60 px-3 py-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void send(draft);
-              }}
+              className="flex items-center gap-2 border-t border-border/60 px-3 py-3 shrink-0"
+              onSubmit={(e) => { e.preventDefault(); void send(draft); }}
             >
               <Input
                 ref={inputRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Type your message..."
+                placeholder="Ask anything about LocalConnect..."
                 className="h-10"
+                disabled={isStreaming}
               />
-              <Button type="submit" className="h-10 w-10 rounded-full gradient-primary border-0" aria-label="Send message" disabled={!draft.trim()}>
+              <Button
+                type="submit"
+                className="h-10 w-10 rounded-full gradient-primary border-0"
+                aria-label="Send message"
+                disabled={!draft.trim() || isStreaming}
+              >
                 <Send className="h-4 w-4 text-primary-foreground" />
               </Button>
             </form>
@@ -275,4 +276,3 @@ export default function AiChatbot() {
     </>
   );
 }
-
