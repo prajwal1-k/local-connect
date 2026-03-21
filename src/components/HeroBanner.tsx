@@ -2,12 +2,12 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Star, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroBanner from "@/assets/Screenshot From 2026-03-20 20-27-02.png";
+import heroBanner from "@/assets/hero-banner.jpg";
 
 export default function HeroBanner() {
   return (
     <section className="relative overflow-hidden">
-      <div className="relative h-[420px] md:h-[480px]">
+      <div className="relative h-[360px] sm:h-[420px] md:h-[480px]">
         <img
           src={heroBanner}
           alt="KodeQuantum professionals"
@@ -15,7 +15,7 @@ export default function HeroBanner() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
 
-        <div className="container relative mx-auto flex h-full items-center px-4">
+        <div className="container relative mx-auto flex h-full items-start px-4 pt-14 md:items-center md:pt-0">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             animate={{ opacity: 1, x: 0 }}
@@ -31,7 +31,7 @@ export default function HeroBanner() {
               </span>
             </div>
 
-            <h2 className="mb-3 text-3xl font-bold leading-tight text-white md:text-5xl" style={{ lineHeight: 1.1 }}>
+            <h2 className="mb-3 text-2xl font-bold leading-tight text-white sm:text-3xl md:text-5xl" style={{ lineHeight: 1.1 }}>
               Grow Your Business with LocalConnect
             </h2>
             <p className="mb-6 max-w-md text-sm text-white/75 md:text-base">

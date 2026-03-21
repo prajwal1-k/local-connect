@@ -268,7 +268,7 @@ export default function About() {
       </section>
 
       {/* Footer */}
-      <footer className="py-10">
+      <footer className="py-8 sm:py-10">
 
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground md:flex-row">
 

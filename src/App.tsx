@@ -14,6 +14,7 @@ import ProviderDashboard from "./pages/ProviderDashboard";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
+import AiChatbot from "@/components/AiChatbot";
 
 
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+            <AiChatbot />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

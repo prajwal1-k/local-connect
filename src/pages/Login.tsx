@@ -31,16 +31,19 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4 py-8">
       <div className="absolute inset-0 gradient-primary opacity-[0.02]" />
-      <Button variant="ghost" asChild className="absolute left-4 top-4 z-20 text-muted-foreground hover:text-foreground">
-        <Link to="/" className="flex items-center gap-2">
-          <ArrowRight className="h-4 w-4 rotate-180" />
-          Back to Home
-        </Link>
-      </Button>
-      <Card className="relative z-10 w-full max-w-md border-0 shadow-elevated">
-        <CardHeader className="text-center">
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-4">
+          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground -ml-2">
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowRight className="h-4 w-4 rotate-180" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
+        <Card className="w-full border-0 shadow-elevated">
+          <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
             <span className="text-xl font-bold text-primary-foreground">K</span>
           </Link>
@@ -72,6 +75,7 @@ export default function Login() {
           </p>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

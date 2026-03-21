@@ -355,16 +355,17 @@ export default function Index() {
       </section>
 
 {/* Footer */}
-<footer className="relative mt-20">
+<footer className="relative mt-14 sm:mt-20">
   {/* Glass Container */}
-  <div className="backdrop-blur-xl bg-white/5 dark:bg-white/5 border-t border-white/10">
-    <div className="container mx-auto px-4 py-10 sm:py-12">
+  <div className="relative mx-4 overflow-hidden rounded-2xl backdrop-blur-xl bg-white/5 dark:bg-white/5 border border-white/10 sm:mx-0">
+    <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent" />
+    <div className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
       
       {/* Top Section */}
-      <div className="grid grid-cols-1 gap-10 text-center sm:text-left md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-8 text-center sm:gap-10 sm:text-left md:grid-cols-3">
         
         {/* Brand */}
-        <div className="flex flex-col items-center sm:items-start gap-3">
+        <div className="col-span-2 flex flex-col items-center sm:items-start gap-3 md:col-span-1">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/80 to-primary shadow-lg">
               <span className="text-sm font-bold text-white">K</span>
@@ -394,10 +395,10 @@ export default function Index() {
         </div>
 
         {/* Social */}
-        <div className="flex flex-col items-center sm:items-start gap-4">
+        <div className="flex flex-col items-center sm:items-start gap-3">
           <h4 className="font-semibold text-foreground">Connect</h4>
 
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-4">
             {["🌐", "🐦", "💼", "📸"].map((icon, i) => (
               <a
                 key={i}
@@ -416,10 +417,10 @@ export default function Index() {
       </div>
 
       {/* Divider */}
-      <div className="my-8 border-t border-white/10" />
+      <div className="my-6 border-t border-white/10 sm:my-8" />
 
       {/* Bottom */}
-      <div className="flex flex-col items-center gap-4 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+      <div className="flex flex-col items-center gap-3 text-xs text-muted-foreground sm:gap-4 sm:text-sm sm:flex-row sm:justify-between">
         <p>© 2026 KodeQuantum. All rights reserved.</p>
 
         <div className="flex flex-wrap justify-center gap-4">

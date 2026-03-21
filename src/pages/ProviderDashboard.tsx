@@ -141,8 +141,7 @@ export default function ProviderDashboard() {
           {[
             { label: "Services", value: myServices.length },
             { label: "Pending", value: pendingReqs.length },
-            { label: "Completed", value: pastReqs.filter(r => r.status === "completed").length },
-            { label: "Rating", value: avgRating > 0 ? `${avgRating} ⭐` : "N/A" },
+            { label: "Completed", value: pastReqs.filter(r => r.status === "completed").length }
           ].map((stat) => (
             <Card key={stat.label} className="border-0 shadow-card">
               <CardContent className="p-4 text-center">
