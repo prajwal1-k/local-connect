@@ -254,7 +254,7 @@ export default function ServiceDetail() {
         )}
 
         {/* Reviews list */}
-        <Card className="border-0 shadow-card">
+        {/* <Card className="border-0 shadow-card">
           <CardHeader><CardTitle>Reviews ({reviews.length})</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {reviews.length === 0 ? (
@@ -275,7 +275,7 @@ export default function ServiceDetail() {
               ))
             )}
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

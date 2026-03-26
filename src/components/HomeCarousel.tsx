@@ -8,6 +8,8 @@ import slideB2B from "@/assets/slide-b2b.jpg";
 import slideDoctors from "@/assets/slide-doctors.jpg";
 import slideRealEstate from "@/assets/slide-realestate.jpg";
 import slideServices from "@/assets/slide-services.jpg";
+import slideTutorials from "@/assets/online-tutoing.png";
+
 
 const slides = [
   {
@@ -35,6 +37,11 @@ const slides = [
     title: "Real Estate",
     desc: "Property listings, agents and home inspection services",
   },
+  {
+    image: slideTutorials,
+    title: "Online Tutoring",
+    desc: "Connect with expert tutors for personalized learning",
+  }
 ];
 
 export default function HomeCarousel() {

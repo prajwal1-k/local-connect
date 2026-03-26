@@ -76,11 +76,11 @@ export default function About() {
             transition={{ duration: 0.6 }}
           >
             <span className="mb-4 inline-block rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent">
-              About KodeQuantum
+              About LocalConnect
             </span>
 
             <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              About <span>KodeQuantum</span>
+              About <span>LocalConnect</span>
             </h1>
 
             <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground">
@@ -282,7 +282,7 @@ export default function About() {
             </span>
           </div>
 
-          <p>© 2026 KodeQuantum. All rights reserved.</p>
+          <p>© 2026 LocalConnect. All rights reserved.</p>
 
         </div>
 

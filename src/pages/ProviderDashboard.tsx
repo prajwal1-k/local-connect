@@ -205,6 +205,8 @@ export default function ProviderDashboard() {
             )}
           </TabsContent>
 
+
+          {/* This is for the add the service file */}
           <TabsContent value="services">
             <div className="mb-4 flex justify-end">
               <Dialog open={showAddService} onOpenChange={setShowAddService}>
@@ -260,6 +262,8 @@ export default function ProviderDashboard() {
               </Dialog>
             </div>
 
+            {/* This will check the length of the services and if there are no services it will show a message to add the first service. 
+            If there are services it will show the list of services. */}
             {myServices.length === 0 ? (
               <Card className="border-0 shadow-card"><CardContent className="py-12 text-center text-muted-foreground">No services yet. Add your first service to get started!</CardContent></Card>
             ) : (
