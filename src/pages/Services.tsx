@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Star, MapPin, Clock, ArrowLeft } from "lucide-react";
+import { Search, Star, MapPin, Clock, ArrowLeft, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +33,12 @@ export default function Services() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
+  const [aiDetails, setAiDetails] = useState("");
+  const [aiLocation, setAiLocation] = useState("");
+  const [aiDate, setAiDate] = useState("");
+  const [aiTime, setAiTime] = useState("");
+  const [aiMatch, setAiMatch] = useState<ServiceWithProvider | null>(null);
+  const [aiRankedMatches, setAiRankedMatches] = useState<ServiceWithProvider[]>([]);
 
   useEffect(() => {
     supabase.from("categories").select("*").then(({ data }) => setCategories(data || []));
@@ -102,6 +108,51 @@ export default function Services() {
     s.category_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const aiRecommendService = () => {
+    const details = aiDetails.trim().toLowerCase();
+    const location = aiLocation.trim().toLowerCase();
+
+    if (!details) {
+      setAiMatch(null);
+      return;
+    }
+
+    const detailTokens = details.split(/\s+/).filter(Boolean);
+
+    const ranked = services
+      .map((service) => {
+        let score = 0;
+        const searchable = `${service.title} ${service.description || ""} ${service.category_name} ${service.provider_name}`.toLowerCase();
+
+        detailTokens.forEach((token) => {
+          if (searchable.includes(token)) score += 2;
+        });
+
+        if (location && service.provider_location.toLowerCase().includes(location)) score += 3;
+        score += Math.min(service.avg_rating, 5) * 1.5;
+        score -= service.price / 1000;
+        score += Math.min(service.experience_years || 0, 15) * 0.1;
+
+        return { service, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map((item) => item.service);
+
+    setAiRankedMatches(ranked);
+    setAiMatch(ranked[0] || null);
+  };
+
+  const getAiBookingLink = () => {
+    if (!aiMatch) return "#";
+    const params = new URLSearchParams();
+    params.set("ai", "1");
+    if (aiDetails.trim()) params.set("description", aiDetails.trim());
+    if (aiLocation.trim()) params.set("address", aiLocation.trim());
+    if (aiDate) params.set("date", aiDate);
+    if (aiTime) params.set("time", aiTime);
+    return `/service/${aiMatch.id}?${params.toString()}`;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
@@ -117,6 +168,94 @@ export default function Services() {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
+        <Card className="mb-6 border border-primary/20 bg-primary/5 shadow-card">
+          <CardContent className="p-5">
+            <div className="mb-4 flex items-start gap-3">
+              <div className="rounded-xl bg-primary/15 p-2 text-primary">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">AI Booking Assistant</h2>
+                <p className="text-sm text-muted-foreground">
+                  Share your requirements and AI will pick the best service match. Then book in one click.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                value={aiDetails}
+                onChange={(e) => setAiDetails(e.target.value)}
+                placeholder="What do you need? (e.g., AC repair, urgent, budget-friendly)"
+                className="md:col-span-2"
+              />
+              <Input
+                value={aiLocation}
+                onChange={(e) => setAiLocation(e.target.value)}
+                placeholder="Location / area"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input type="date" value={aiDate} onChange={(e) => setAiDate(e.target.value)} />
+                <Input type="time" value={aiTime} onChange={(e) => setAiTime(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Button onClick={aiRecommendService} className="gradient-primary border-0">
+                <Wand2 className="mr-2 h-4 w-4" />
+                Find Best with AI
+              </Button>
+              {aiMatch ? (
+                <Button asChild variant="secondary">
+                  <Link to={getAiBookingLink()}>Book with AI</Link>
+                </Button>
+              ) : null}
+            </div>
+
+            {aiMatch ? (
+              <div className="mt-4 rounded-xl border border-border bg-background p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">AI top match</p>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-semibold">{aiMatch.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {aiMatch.provider_name} • {aiMatch.provider_location || "Any location"}
+                    </p>
+                  </div>
+                  <p className="font-bold text-primary">₹{aiMatch.price}{aiMatch.price_type === "hourly" ? "/hr" : ""}</p>
+                </div>
+              </div>
+            ) : null}
+
+            {aiRankedMatches.length > 1 ? (
+              <div className="mt-4 rounded-xl border border-border bg-background p-4">
+                <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Other matching services
+                </p>
+                <div className="space-y-2">
+                  {aiRankedMatches.slice(1, 6).map((service) => (
+                    <Link
+                      key={service.id}
+                      to={`/service/${service.id}`}
+                      className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/60"
+                    >
+                      <div>
+                        <p className="font-medium">{service.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {service.provider_name} • {service.provider_location || "Any location"}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-primary">
+                        ₹{service.price}{service.price_type === "hourly" ? "/hr" : ""}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
         <div className="mb-8 flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
