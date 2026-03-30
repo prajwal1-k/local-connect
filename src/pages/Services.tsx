@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import Logo from "@/assets/logo.png";
 
 interface ServiceWithProvider {
   id: string;
@@ -108,9 +109,9 @@ export default function Services() {
           <Button variant="ghost" size="icon" asChild><Link to="/"><ArrowLeft className="h-5 w-5" /></Link></Button>
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">K</span>
+              <img src= {Logo} alt="Servixen Logo" />
             </div>
-            <span className="font-bold">KodeQuantum</span>
+            <span className="font-bold">Servixen</span>
           </Link>
         </div>
       </nav>

@@ -41,7 +41,7 @@ export default function GrowSection() {
               For Professionals
             </span>
             <h2 className="mb-3 text-3xl font-bold tracking-tight md:text-4xl">
-              Grow Using KodeQuantum
+              Grow Using Servixen
             </h2>
             <p className="mx-auto max-w-lg text-muted-foreground">
               Join our platform and turn your skills into a thriving business

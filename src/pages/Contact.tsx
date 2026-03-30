@@ -90,7 +90,7 @@ export default function Contact() {
           >
             <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent">
               <MessageCircle className="h-4 w-4" />
-              Contact LocalConnect
+              Contact <span className="font-bold">Servixen</span>
             </span>
             <h1 className="mx-auto mb-4 max-w-3xl text-4xl font-bold tracking-tight md:text-6xl">
               We are here to help

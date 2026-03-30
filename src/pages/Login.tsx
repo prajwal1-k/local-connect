@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import Logo from "@/assets/logo.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -45,10 +46,10 @@ export default function Login() {
         <Card className="w-full border-0 shadow-elevated">
           <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
-            <span className="text-xl font-bold text-primary-foreground">K</span>
+            <img src= {Logo} alt="Servixen Logo" />
           </Link>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Log in to your KodeQuantum account</CardDescription>
+          <CardDescription>Log in to your Servixen</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

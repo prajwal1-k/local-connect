@@ -16,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import Logo from "@/assets/logo.png";
 
 const values = [
   {
@@ -76,11 +77,11 @@ export default function About() {
             transition={{ duration: 0.6 }}
           >
             <span className="mb-4 inline-block rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent">
-              About LocalConnect
+              About Servixen
             </span>
 
             <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              About <span>LocalConnect</span>
+              About <span>Servixen</span>
             </h1>
 
             <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground">
@@ -121,8 +122,12 @@ export default function About() {
               <h2 className="mb-4 text-3xl font-bold tracking-tight">Our Story</h2>
 
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Founded in 2026, KodeQuantum was born from a simple idea: local services should be as easy to access as online shopping.
-                We noticed that finding trustworthy local professionals was often frustrating and time-consuming.
+                Servixen is a modern local services platform designed to bridge the gap between service providers and customers in a fast, reliable, and seamless way. Whether you need home services, technical assistance, or everyday help, Servixen makes it simple to connect with trusted professionals right in your area.
+
+Built with a vision to empower local communities, Servixen focuses on convenience, transparency, and quality. We ensure that users can easily discover, compare, and book services with confidence, while service providers get a powerful platform to grow their business and reach more customers.
+
+Servixen is proudly created by KodeQuantum, a technology-driven initiative dedicated to building innovative digital solutions that solve real-world problems. With a strong focus on user experience and smart technology, KodeQuantum aims to transform how local services are accessed and delivered.
+<br></br>At Servixen, we believe in making everyday life easier—by bringing reliable services closer to you
               </p>
             </motion.div>
 
@@ -274,15 +279,15 @@ export default function About() {
 
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">K</span>
+             <img src= {Logo} alt="Servixen Logo" />
             </div>
 
             <span className="font-semibold text-foreground">
-              KodeQuantum Local Services
+              Servixen
             </span>
           </div>
 
-          <p>© 2026 LocalConnect. All rights reserved.</p>
+          <p>© 2026 Servixen. All rights reserved.</p>
 
         </div>
 

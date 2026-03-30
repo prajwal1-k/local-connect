@@ -16,7 +16,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const SUGGESTIONS = [
   "What services do you offer?",
-  "How does LocalConnect work?",
+  "How does Servixen work?",
   "How do I become a provider?",
   "Contact support",
 ];
@@ -107,7 +107,7 @@ export default function AiChatbot() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "Hi! 👋 I'm the **LocalConnect AI Assistant**. How can I help you today?" },
+    { role: "assistant", content: "Hi! 👋 I'm the **Servixen AI Assistant**. How can I help you today?" },
   ]);
   const [isStreaming, setIsStreaming] = useState(false);
 
@@ -186,7 +186,7 @@ export default function AiChatbot() {
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold leading-none">LocalConnect AI</p>
+                  <p className="text-sm font-semibold leading-none">Servixen AI</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {isStreaming ? "Typing..." : "Powered by AI"}
                   </p>
@@ -257,7 +257,7 @@ export default function AiChatbot() {
                 ref={inputRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Ask anything about LocalConnect..."
+                placeholder="Ask anything about Servixen..."
                 className="h-10"
                 disabled={isStreaming}
               />

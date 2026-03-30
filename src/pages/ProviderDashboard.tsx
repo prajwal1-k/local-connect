@@ -127,7 +127,7 @@ export default function ProviderDashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
               <span className="text-sm font-bold text-primary-foreground">K</span>
             </div>
-            <span className="font-bold">KodeQuantum</span>
+            <span className="font-bold">Servixen</span>
           </Link>
           <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate("/"); }}>
             <LogOut className="h-4 w-4" />

@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { ArrowRight, Eye, EyeOff, User, Briefcase } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import Logo from "@/assets/logo.png";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -61,10 +62,10 @@ export default function Signup() {
         <Card className="w-full border-0 shadow-elevated">
           <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
-            <span className="text-xl font-bold text-primary-foreground">K</span>
+            <img src= {Logo} alt="Servixen Logo" />
           </Link>
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Join KodeQuantum Local Services</CardDescription>
+          <CardDescription>Join Servixen</CardDescription>
           </CardHeader>
           <CardContent>
           {/* Role selector */}

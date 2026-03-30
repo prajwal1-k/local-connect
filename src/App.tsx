@@ -17,7 +17,6 @@ import Contact from "./pages/Contact";
 import AiChatbot from "@/components/AiChatbot";
 
 
-
 const queryClient = new QueryClient();
 
 const App = () => (

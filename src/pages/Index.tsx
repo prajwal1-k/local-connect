@@ -11,6 +11,8 @@ import HomeCarousel from "@/components/HomeCarousel";
 import HeroServicesCarousel from "@/components/HeroServicesCarousel";
 import GrowSection from "@/components/GrowSection";
 import HeroBanner from "@/components/HeroBanner";
+import InstantServiceSection  from "@/components/InstantServiceSection";
+import Logo from "@/assets/logo.png";
 
 const iconMap: Record<string, React.ReactNode> = {
   home: <Home className="h-8 w-8" />,
@@ -53,10 +55,10 @@ export default function Index() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-              <span className="text-lg font-bold text-primary-foreground">K</span>
+              <img src= {Logo} alt="Servixen Logo" />
             </div>
             <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              LocalConnect
+              Servixen
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
@@ -197,7 +199,6 @@ export default function Index() {
 
       {/* Top Banner Ad */}
       <HeroBanner />
-
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
         <div className="container mx-auto px-4">
@@ -244,6 +245,9 @@ export default function Index() {
         </div>
       </section>
 
+
+      
+
       {/* Categories */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
@@ -278,6 +282,9 @@ export default function Index() {
 
       {/* Photo Carousel */}
       <HomeCarousel />
+
+
+      <InstantServiceSection />
 
       {/* How it works */}
       <section className="bg-muted/50 py-16 md:py-24">
@@ -368,14 +375,14 @@ export default function Index() {
         <div className="col-span-2 flex flex-col items-center sm:items-start gap-3 md:col-span-1">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/80 to-primary shadow-lg">
-              <span className="text-sm font-bold text-white">K</span>
+              <img src= {Logo} alt="Servixen Logo" />
             </div>
             <span className="text-lg font-semibold text-foreground">
-              KodeQuantum
+              Servixen
             </span>
           </div>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Smart local services platform connecting you with trusted professionals near you.
+            “Connecting You to Reliable Local Experts”
           </p>
         </div>
 
@@ -411,7 +418,7 @@ export default function Index() {
           </div>
 
           <p className="text-sm text-muted-foreground text-center sm:text-left">
-            support@kodequantum.com
+            support@servixen.com
           </p>
         </div>
       </div>
@@ -421,7 +428,7 @@ export default function Index() {
 
       {/* Bottom */}
       <div className="flex flex-col items-center gap-3 text-xs text-muted-foreground sm:gap-4 sm:text-sm sm:flex-row sm:justify-between">
-        <p>© 2026 KodeQuantum. All rights reserved.</p>
+        <p>© 2026 Servixen. All rights reserved.</p>
 
         <div className="flex flex-wrap justify-center gap-4">
           <a href="#" className="hover:text-foreground transition-colors">

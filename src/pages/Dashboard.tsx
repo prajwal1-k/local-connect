@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import Logo from "@/assets/logo.png";
+
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -87,9 +89,9 @@ export default function Dashboard() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">K</span>
+              <img src= {Logo} alt="Servixen Logo" />
             </div>
-            <span className="font-bold">KodeQuantum</span>
+            <span className="font-bold">Servixen</span>
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild><Link to="/services">Browse</Link></Button>
