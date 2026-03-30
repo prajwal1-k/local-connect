@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Star, MapPin, Clock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 
 export default function ServiceDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const [service, setService] = useState<any>(null);
@@ -35,6 +36,17 @@ export default function ServiceDetail() {
     if (!id) return;
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    const aiMode = searchParams.get("ai") === "1";
+    if (!aiMode) return;
+
+    setBookingDesc(searchParams.get("description") || "");
+    setBookingAddress(searchParams.get("address") || "");
+    setBookingDate(searchParams.get("date") || "");
+    setBookingTime(searchParams.get("time") || "");
+    setBookingOpen(true);
+  }, [searchParams]);
 
   const fetchData = async () => {
     const { data: svc } = await supabase.from("services").select("*, categories(name)").eq("id", id!).single();
@@ -197,6 +209,11 @@ export default function ServiceDetail() {
                   <DialogHeader>
                     <DialogTitle>Book: {service.title}</DialogTitle>
                   </DialogHeader>
+                  {searchParams.get("ai") === "1" ? (
+                    <div className="rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
+                      Pre-filled by AI assistant. Review details and send your request.
+                    </div>
+                  ) : null}
                   <div className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label>Describe your requirement *</Label>
