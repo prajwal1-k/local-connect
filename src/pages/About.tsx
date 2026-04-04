@@ -45,12 +45,7 @@ const values = [
   }
 ];
 
-const stats = [
-  { number: "15,000+", label: "Happy Customers", icon: <Users className="h-6 w-6" />, color: "text-blue-500" },
-  { number: "3,200+", label: "Verified Providers", icon: <Shield className="h-6 w-6" />, color: "text-green-500" },
-  { number: "75+", label: "Service Categories", icon: <Globe className="h-6 w-6" />, color: "text-purple-500" },
-  { number: "4.9/5", label: "Average Rating", icon: <Star className="h-6 w-6" />, color: "text-yellow-500" }
-];
+
 
 export default function About() {
   return (
@@ -230,7 +225,7 @@ Servixen is proudly created by KodeQuantum, a technology-driven initiative dedic
       </section>
 
       {/* Stats */}
-      <section className="py-16 md:py-24">
+      {/* <section className="py-16 md:py-24">
 
         <div className="container mx-auto px-4">
 
@@ -270,7 +265,7 @@ Servixen is proudly created by KodeQuantum, a technology-driven initiative dedic
           </div>
         </div>
 
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="py-8 sm:py-10">

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, Star, MapPin, Clock, ArrowLeft, Sparkles, Wand2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,17 +29,15 @@ interface ServiceWithProvider {
 }
 
 export default function Services() {
+  const navigate = useNavigate();
+  const { user, role } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [services, setServices] = useState<ServiceWithProvider[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bookingServiceId, setBookingServiceId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
-  const [aiDetails, setAiDetails] = useState("");
-  const [aiLocation, setAiLocation] = useState("");
-  const [aiDate, setAiDate] = useState("");
-  const [aiTime, setAiTime] = useState("");
-  const [aiMatch, setAiMatch] = useState<ServiceWithProvider | null>(null);
 
   useEffect(() => {
     supabase.from("categories").select("*").then(({ data }) => setCategories(data || []));
@@ -49,54 +49,110 @@ export default function Services() {
 
   const fetchServices = async () => {
     setLoading(true);
-    let query = supabase
-      .from("services")
-      .select("*, categories(name)")
-      .eq("is_active", true);
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.set("is_active", "true");
+      if (selectedCategory && selectedCategory !== "all") {
+        queryParams.set("category_id", selectedCategory);
+      }
 
-    if (selectedCategory && selectedCategory !== "all") {
-      query = query.eq("category_id", selectedCategory);
+      const servicesResponse = await fetch(`/api/services?${queryParams.toString()}`);
+      if (!servicesResponse.ok) {
+        throw new Error("Could not fetch services from API");
+      }
+
+      const servicesData = await servicesResponse.json();
+      if (!Array.isArray(servicesData)) {
+        throw new Error("Invalid services data");
+      }
+
+      const providerIds = [...new Set(servicesData.map((s: any) => s.provider_id))];
+      const [{ data: profiles }, { data: reviews }] = await Promise.all([
+        supabase.from("profiles").select("user_id, full_name, location").in("user_id", providerIds),
+        supabase.from("reviews").select("provider_id, rating").in("provider_id", providerIds),
+      ]);
+
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+      const ratingMap = new Map<string, { sum: number; count: number }>();
+      (reviews || []).forEach(r => {
+        const existing = ratingMap.get(r.provider_id) || { sum: 0, count: 0 };
+        ratingMap.set(r.provider_id, { sum: existing.sum + r.rating, count: existing.count + 1 });
+      });
+
+      const categoryMap = new Map(categories.map(c => [c.id, c.name]));
+
+      const mapped: ServiceWithProvider[] = servicesData.map(s => {
+        const profile = profileMap.get(s.provider_id);
+        const rating = ratingMap.get(s.provider_id);
+        return {
+          id: s._id,
+          title: s.title,
+          description: s.description,
+          price: s.price,
+          price_type: s.price_type,
+          experience_years: s.experience_years,
+          category_id: s.category_id,
+          provider_id: s.provider_id,
+          provider_name: profile?.full_name || "Provider",
+          provider_location: profile?.location || "",
+          category_name: categoryMap.get(s.category_id) || "",
+          avg_rating: rating ? Math.round((rating.sum / rating.count) * 10) / 10 : 0,
+          review_count: rating?.count || 0,
+        };
+      });
+
+      setServices(mapped);
+    } catch (err:any) {
+      console.error(err);
+      toast({ title: "Failed", description: err.message || "Error loading services", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const bookService = async (service: ServiceWithProvider) => {
+    if (!user) {
+      toast({ title: "Login needed", description: "Please log in to book a service", variant: "destructive" });
+      return;
     }
 
-    const { data: servicesData } = await query;
+    if (role !== "service_taker") {
+      toast({ title: "Access denied", description: "Only service takers can book requests", variant: "destructive" });
+      return;
+    }
 
-    if (!servicesData) { setLoading(false); return; }
+    setBookingServiceId(service.id);
+    try {
+      const response = await fetch("/api/service-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taker_id: user.id,
+          provider_id: service.provider_id,
+          service_id: service.id,
+          description: `Booking from services listing: ${service.title}`,
+          address: "",
+        }),
+      });
 
-    const providerIds = [...new Set(servicesData.map(s => s.provider_id))];
-    const [{ data: profiles }, { data: reviews }] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, location").in("user_id", providerIds),
-      supabase.from("reviews").select("provider_id, rating").in("provider_id", providerIds),
-    ]);
+      if (!response.ok) {
+        const text = await response.text();
+        let message = "Failed to create request";
+        try {
+          const body = JSON.parse(text);
+          message = body?.message || body?.error || text || message;
+        } catch {
+          message = text || message;
+        }
+        throw new Error(message);
+      }
 
-    const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
-    const ratingMap = new Map<string, { sum: number; count: number }>();
-    (reviews || []).forEach(r => {
-      const existing = ratingMap.get(r.provider_id) || { sum: 0, count: 0 };
-      ratingMap.set(r.provider_id, { sum: existing.sum + r.rating, count: existing.count + 1 });
-    });
-
-    const mapped: ServiceWithProvider[] = servicesData.map(s => {
-      const profile = profileMap.get(s.provider_id);
-      const rating = ratingMap.get(s.provider_id);
-      return {
-        id: s.id,
-        title: s.title,
-        description: s.description,
-        price: s.price,
-        price_type: s.price_type,
-        experience_years: s.experience_years,
-        category_id: s.category_id,
-        provider_id: s.provider_id,
-        provider_name: profile?.full_name || "Provider",
-        provider_location: profile?.location || "",
-        category_name: (s.categories as any)?.name || "",
-        avg_rating: rating ? Math.round((rating.sum / rating.count) * 10) / 10 : 0,
-        review_count: rating?.count || 0,
-      };
-    });
-
-    setServices(mapped);
-    setLoading(false);
+      toast({ title: "Request sent", description: "Provider can now see this booking request." });
+    } catch (err:any) {
+      toast({ title: "Booking failed", description: err.message || "Could not create service request", variant: "destructive" });
+    } finally {
+      setBookingServiceId(null);
+    }
   };
 
   const filtered = services.filter(s =>
@@ -107,52 +163,6 @@ export default function Services() {
     s.category_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const aiRecommendService = () => {
-    const details = aiDetails.trim().toLowerCase();
-    const location = aiLocation.trim().toLowerCase();
-
-    if (!details) {
-      setAiMatch(null);
-      return;
-    }
-
-    const detailTokens = details.split(/\s+/).filter(Boolean);
-
-    let best: ServiceWithProvider | null = null;
-    let bestScore = -Infinity;
-
-    for (const service of services) {
-      let score = 0;
-      const searchable = `${service.title} ${service.description || ""} ${service.category_name} ${service.provider_name}`.toLowerCase();
-
-      detailTokens.forEach((token) => {
-        if (searchable.includes(token)) score += 2;
-      });
-
-      if (location && service.provider_location.toLowerCase().includes(location)) score += 3;
-      score += Math.min(service.avg_rating, 5) * 1.5;
-      score -= service.price / 1000;
-      score += Math.min(service.experience_years || 0, 15) * 0.1;
-
-      if (score > bestScore) {
-        bestScore = score;
-        best = service;
-      }
-    }
-
-    setAiMatch(best);
-  };
-
-  const getAiBookingLink = () => {
-    if (!aiMatch) return "#";
-    const params = new URLSearchParams();
-    params.set("ai", "1");
-    if (aiDetails.trim()) params.set("description", aiDetails.trim());
-    if (aiLocation.trim()) params.set("address", aiLocation.trim());
-    if (aiDate) params.set("date", aiDate);
-    if (aiTime) params.set("time", aiTime);
-    return `/service/${aiMatch.id}?${params.toString()}`;
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,71 +179,15 @@ export default function Services() {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        <Card className="mb-6 border border-primary/20 bg-primary/5 shadow-card">
-          <CardContent className="p-5">
-            <div className="mb-4 flex items-start gap-3">
-              <div className="rounded-xl bg-primary/15 p-2 text-primary">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">AI Booking Assistant</h2>
-                <p className="text-sm text-muted-foreground">
-                  Share your requirements and AI will pick the best service match. Then book in one click.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <Input
-                value={aiDetails}
-                onChange={(e) => setAiDetails(e.target.value)}
-                placeholder="What do you need? (e.g., AC repair, urgent, budget-friendly)"
-                className="md:col-span-2"
-              />
-              <Input
-                value={aiLocation}
-                onChange={(e) => setAiLocation(e.target.value)}
-                placeholder="Location / area"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <Input type="date" value={aiDate} onChange={(e) => setAiDate(e.target.value)} />
-                <Input type="time" value={aiTime} onChange={(e) => setAiTime(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Button onClick={aiRecommendService} className="gradient-primary border-0">
-                <Wand2 className="mr-2 h-4 w-4" />
-                Find Best with AI
-              </Button>
-              {aiMatch ? (
-                <Button asChild variant="secondary">
-                  <Link to={getAiBookingLink()}>Book with AI</Link>
-                </Button>
-              ) : null}
-            </div>
-
-            {aiMatch ? (
-              <div className="mt-4 rounded-xl border border-border bg-background p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">AI top match</p>
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-semibold">{aiMatch.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {aiMatch.provider_name} • {aiMatch.provider_location || "Any location"}
-                    </p>
-                  </div>
-                  <p className="font-bold text-primary">₹{aiMatch.price}{aiMatch.price_type === "hourly" ? "/hr" : ""}</p>
-                </div>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-
         <div className="mb-8 flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search services..." className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <Input
+              placeholder="Search services..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
           <Select value={selectedCategory} onValueChange={(v) => { setSelectedCategory(v); setSearchParams(v === "all" ? {} : { category: v }); }}>
             <SelectTrigger className="w-full md:w-56">
@@ -260,9 +214,9 @@ export default function Services() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((service, i) => (
               <motion.div key={service.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                <Link to={`/service/${service.id}`}>
-                  <Card className="group border-0 shadow-card transition-all hover:shadow-elevated hover:-translate-y-1">
-                    <CardContent className="p-6">
+                <Card className="group border-0 shadow-card transition-all hover:shadow-elevated hover:-translate-y-1">
+                  <CardContent className="p-6">
+                    <Link to={`/service/${service.id}`} className="block">
                       <div className="mb-3 flex items-center justify-between">
                         <Badge variant="secondary" className="text-xs">{service.category_name}</Badge>
                         {service.avg_rating > 0 && (
@@ -290,9 +244,14 @@ export default function Services() {
                           <span>{service.experience_years} years experience</span>
                         </div>
                       ) : null}
-                    </CardContent>
-                  </Card>
-                </Link>
+                    </Link>
+                    {role === "service_taker" && (
+                      <Button className="mt-4 w-full gradient-primary border-0" onClick={() => bookService(service)} disabled={bookingServiceId === service.id}>
+                        {bookingServiceId === service.id ? "Requesting..." : "Book Service"}
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>

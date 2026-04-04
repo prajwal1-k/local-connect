@@ -187,7 +187,7 @@ export default function Contact() {
                         </div>
                         <div>
                           <p className="text-sm font-semibold">Email</p>
-                          <p className="mt-1 text-sm text-muted-foreground">kodequantum@gmail.com</p>
+                          <p className="mt-1 text-sm text-muted-foreground">servixen.gmail.com</p>
                         </div>
                       </div>
                     </div>
@@ -200,7 +200,7 @@ export default function Contact() {
                         <div>
                           <p className="text-sm font-semibold">Address</p>
                           <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
-                            LocalConnect
+                            Servixen
                             {"\n"}
                             Bengaluru, Karnataka, India
                           </p>

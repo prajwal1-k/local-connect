@@ -49,17 +49,37 @@ export default function ServiceDetail() {
   }, [searchParams]);
 
   const fetchData = async () => {
-    const { data: svc } = await supabase.from("services").select("*, categories(name)").eq("id", id!).single();
-    if (!svc) { setLoading(false); return; }
-    setService(svc);
+    try {
+      const svcResponse = await fetch(`/api/services/${id}`);
+      if (!svcResponse.ok) {
+        throw new Error("Service not found");
+      }
 
-    const [{ data: prof }, { data: revs }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("user_id", svc.provider_id).single(),
-      supabase.from("reviews").select("*, profiles!reviews_reviewer_id_fkey(full_name)").eq("provider_id", svc.provider_id),
-    ]);
-    setProvider(prof);
-    setReviews(revs || []);
-    setLoading(false);
+      const svc = await svcResponse.json();
+      if (!svc) {
+        setLoading(false);
+        return;
+      }
+
+      setService({ ...svc, id: svc._id });
+
+      const [{ data: prof }, { data: revs }, { data: categoryData }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", svc.provider_id).single(),
+        supabase.from("reviews").select("*, profiles!reviews_reviewer_id_fkey(full_name)").eq("provider_id", svc.provider_id),
+        supabase.from("categories").select("*").eq("id", svc.category_id).single(),
+      ]);
+
+      setProvider(prof);
+      setReviews(revs || []);
+      if (categoryData) {
+        setService((prev) => ({ ...prev, category: categoryData }));
+      }
+    } catch (err:any) {
+      console.error(err);
+      toast({ title: "Error loading service", description: err.message || "Service load failed", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBooking = async () => {
@@ -69,23 +89,41 @@ export default function ServiceDetail() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("service_requests").insert({
-      taker_id: user.id,
-      provider_id: service.provider_id,
-      service_id: service.id,
-      description: bookingDesc.trim(),
-      address: bookingAddress.trim(),
-      preferred_date: bookingDate || null,
-      preferred_time: bookingTime || null,
-    });
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Booking failed", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      const response = await fetch('/api/service-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taker_id: user.id,
+          provider_id: service.provider_id,
+          service_id: service.id,
+          description: bookingDesc.trim(),
+          address: bookingAddress.trim(),
+          preferred_date: bookingDate || null,
+          preferred_time: bookingTime || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = 'Failed to create service request';
+        try {
+          const body = JSON.parse(text);
+          message = body?.message || body?.error || text || message;
+        } catch {
+          message = text || message;
+        }
+        throw new Error(message);
+      }
+
       toast({ title: "Request sent!", description: "The provider will respond to your request shortly." });
       setBookingOpen(false);
       setBookingDesc("");
       setBookingAddress("");
+    } catch (err: any) {
+      toast({ title: "Booking failed", description: err.message || "Error creating service request", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -156,7 +194,7 @@ export default function ServiceDetail() {
       <div className="container mx-auto max-w-3xl px-4 py-8">
         <Card className="mb-6 border-0 shadow-elevated">
           <CardContent className="p-8">
-            <Badge variant="secondary" className="mb-3">{(service.categories as any)?.name}</Badge>
+            <Badge variant="secondary" className="mb-3">{(service.category as any)?.name || "Uncategorized"}</Badge>
             <h1 className="mb-2 text-3xl font-bold">{service.title}</h1>
             <p className="mb-6 text-muted-foreground">{service.description}</p>
 

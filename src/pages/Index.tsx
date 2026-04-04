@@ -11,7 +11,7 @@ import HomeCarousel from "@/components/HomeCarousel";
 import HeroServicesCarousel from "@/components/HeroServicesCarousel";
 import GrowSection from "@/components/GrowSection";
 import HeroBanner from "@/components/HeroBanner";
-import InstantServiceSection  from "@/components/InstantServiceSection";
+import BusinessAIBanner from "@/components/BusinessAIBanner";
 import Logo from "@/assets/logo.png";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -65,9 +65,9 @@ export default function Index() {
             <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Home
             </Link>
-            <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            {/* <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Services
-            </Link>
+            </Link> */}
             <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
@@ -198,7 +198,9 @@ export default function Index() {
       </nav>
 
       {/* Top Banner Ad */}
-      <HeroBanner />
+      {/* <HeroBanner /> */}
+      {/* Business AI Banner */}
+      <BusinessAIBanner />
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
         <div className="container mx-auto px-4">
@@ -282,9 +284,6 @@ export default function Index() {
 
       {/* Photo Carousel */}
       <HomeCarousel />
-
-
-      <InstantServiceSection />
 
       {/* How it works */}
       <section className="bg-muted/50 py-16 md:py-24">

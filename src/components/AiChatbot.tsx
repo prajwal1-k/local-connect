@@ -166,6 +166,8 @@ export default function AiChatbot() {
     }
   };
 
+
+
   return (
     <>
       {!open ? (

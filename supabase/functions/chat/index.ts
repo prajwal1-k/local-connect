@@ -28,7 +28,9 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const body = await req.json();
+    const messages = body.messages;
+    const incomingStream = body.stream !== undefined ? body.stream : true;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -46,7 +48,7 @@ serve(async (req) => {
             { role: "system", content: SYSTEM_PROMPT },
             ...messages,
           ],
-          stream: true,
+          stream: incomingStream,
         }),
       }
     );
@@ -70,6 +72,13 @@ serve(async (req) => {
         JSON.stringify({ error: "AI service error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    if (!incomingStream) {
+      const bodyText = await response.text();
+      return new Response(bodyText, {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(response.body, {

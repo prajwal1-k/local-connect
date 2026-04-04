@@ -39,20 +39,45 @@ export default function Dashboard() {
 
   const fetchRequests = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("service_requests")
-      .select("*, services(title, price, price_type), profiles!service_requests_provider_id_fkey(full_name, location)")
-      .eq("taker_id", user.id)
-      .order("created_at", { ascending: false });
 
-    // Fix: profiles join may not work with fkey name, let's fetch separately
-    if (data) {
-      const providerIds = [...new Set(data.map(r => r.provider_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, location").in("user_id", providerIds);
-      const pMap = new Map((profiles || []).map(p => [p.user_id, p]));
-      setRequests(data.map(r => ({ ...r, provider_profile: pMap.get(r.provider_id) })));
+    try {
+      const response = await fetch(`/api/service-requests?taker_id=${encodeURIComponent(user.id)}`);
+      if (!response.ok) {
+        throw new Error(`Requests fetch failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const requestsArray = Array.isArray(data) ? data : [];
+      const providerIds = [...new Set(requestsArray.map((r: any) => r.provider_id).filter(Boolean))];
+      const serviceIds = [...new Set(requestsArray.map((r: any) => r.service_id).filter(Boolean))];
+
+      const profileQuery = providerIds.length > 0
+        ? supabase.from("profiles").select("user_id, full_name, location").in("user_id", providerIds)
+        : Promise.resolve({ data: [] });
+
+      const serviceResponses = serviceIds.length > 0
+        ? Promise.all(serviceIds.map(async (serviceId: string) => {
+            const res = await fetch(`/api/services/${serviceId}`);
+            return res.ok ? await res.json() : null;
+          }))
+        : Promise.resolve([] as any[]);
+
+      const [{ data: profiles }, serviceResults] = await Promise.all([profileQuery, serviceResponses]);
+
+      const pMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      const sMap = new Map((serviceResults || []).filter(Boolean).map((srv: any) => [srv._id, srv]));
+
+      setRequests(requestsArray.map((r: any) => ({
+        ...r,
+        provider_profile: pMap.get(r.provider_id),
+        services: sMap.get(r.service_id) || null,
+      })));
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: "Failed", description: err.message || "Error loading requests", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const submitReview = async (request: any) => {
@@ -75,9 +100,30 @@ export default function Dashboard() {
   };
 
   const cancelRequest = async (id: string) => {
-    await supabase.from("service_requests").update({ status: "cancelled" }).eq("id", id);
-    toast({ title: "Request cancelled" });
-    fetchRequests();
+    try {
+      const response = await fetch(`/api/service-requests/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = "Failed to cancel request";
+        try {
+          const body = JSON.parse(text);
+          message = body?.message || body?.error || text || message;
+        } catch {
+          message = text || message;
+        }
+        throw new Error(message);
+      }
+
+      toast({ title: "Request cancelled" });
+      fetchRequests();
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message || "Could not cancel request", variant: "destructive" });
+    }
   };
 
   const activeRequests = requests.filter(r => ["pending", "accepted"].includes(r.status));

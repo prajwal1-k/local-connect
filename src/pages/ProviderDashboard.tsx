@@ -51,60 +51,148 @@ export default function ProviderDashboard() {
 
   const fetchAll = async () => {
     if (!user) return;
-    const [{ data: cats }, { data: svcs }, { data: reqs }, { data: revs }] = await Promise.all([
+    setLoading(true);
+
+    const [{ data: cats }, { data: revs }] = await Promise.all([
       supabase.from("categories").select("*"),
-      supabase.from("services").select("*, categories(name)").eq("provider_id", user.id),
-      supabase.from("service_requests").select("*, services(title)").eq("provider_id", user.id).order("created_at", { ascending: false }),
       supabase.from("reviews").select("*, profiles!reviews_reviewer_id_fkey(full_name)").eq("provider_id", user.id).order("created_at", { ascending: false }),
     ]);
 
     setCategories(cats || []);
-    setMyServices(svcs || []);
     setReviews(revs || []);
 
-    // Fetch taker profiles for requests
-    if (reqs) {
-      const takerIds = [...new Set(reqs.map(r => r.taker_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, location, phone").in("user_id", takerIds);
-      const pMap = new Map((profiles || []).map(p => [p.user_id, p]));
-      setRequests(reqs.map(r => ({ ...r, taker_profile: pMap.get(r.taker_id) })));
+    let svcs = [];
+    try {
+      const response = await fetch(`/api/services?provider_id=${encodeURIComponent(user.id)}`);
+      if (!response.ok) {
+        throw new Error(`Service fetch failed: ${response.statusText}`);
+      }
+      svcs = await response.json();
+    } catch (err:any) {
+      toast({ title: "Failed", description: err.message || "Error loading services", variant: "destructive" });
+      svcs = [];
     }
+
+    const categoryMap = new Map((cats || []).map((c: any) => [c.id, c]));
+    const serviceWithCategory = (svcs || []).map((svc: any) => ({ ...svc, id: svc._id, categories: categoryMap.get(svc.category_id) || null }));
+    setMyServices(serviceWithCategory);
+
+    try {
+      const requestsResponse = await fetch(`/api/service-requests?provider_id=${encodeURIComponent(user.id)}`);
+      if (!requestsResponse.ok) {
+        throw new Error(`Requests fetch failed: ${requestsResponse.statusText}`);
+      }
+      const reqs = await requestsResponse.json();
+      if (reqs && reqs.length > 0) {
+        const takerIds = [...new Set(reqs.map((r: any) => r.taker_id).filter(Boolean))] as string[];
+        const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, location, phone").in("user_id", takerIds);
+        const pMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+        setRequests(reqs.map((r: any) => ({
+          ...r,
+          id: r._id || r.id,
+          services: serviceWithCategory.find((svc) => svc.id === r.service_id) || null,
+          taker_profile: pMap.get(r.taker_id) || null,
+        })));
+      } else {
+        setRequests([]);
+      }
+    } catch (err:any) {
+      toast({ title: "Failed", description: err.message || "Error loading requests", variant: "destructive" });
+      setRequests([]);
+    }
+
     setLoading(false);
   };
 
   const addService = async () => {
     if (!user || !newTitle.trim() || !newCategory || !newPrice) return;
     setAddingService(true);
-    const { error } = await supabase.from("services").insert({
-      provider_id: user.id,
-      category_id: newCategory,
-      title: newTitle.trim(),
-      description: newDesc.trim(),
-      price: parseFloat(newPrice),
-      price_type: newPriceType,
-      experience_years: newExperience ? parseInt(newExperience) : 0,
-    });
-    setAddingService(false);
-    if (error) {
-      toast({ title: "Failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Service added!" });
+
+    try {
+      const response = await fetch('/api/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider_id: user.id,
+          category_id: newCategory,
+          title: newTitle.trim(),
+          description: newDesc.trim(),
+          price: Number(newPrice) || 0,
+          price_type: newPriceType,
+          experience_years: Number(newExperience) || 0,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = 'Failed to add service';
+        try {
+          const body = JSON.parse(text);
+          message = body?.message || body?.error || text || message;
+        } catch {
+          message = text || message;
+        }
+        throw new Error(message);
+      }
+
+      toast({ title: 'Service added!' });
       setShowAddService(false);
-      setNewTitle(""); setNewDesc(""); setNewPrice(""); setNewExperience("");
-      fetchAll();
+      setNewTitle(''); setNewDesc(''); setNewPrice(''); setNewExperience('');
+      await fetchAll();
+    } catch (err:any) {
+      toast({ title: 'Failed', description: err.message || 'Error adding service', variant: 'destructive' });
+    } finally {
+      setAddingService(false);
     }
   };
 
   const updateRequestStatus = async (id: string, status: "pending" | "accepted" | "rejected" | "completed" | "cancelled") => {
-    await supabase.from("service_requests").update({ status }).eq("id", id);
-    toast({ title: `Request ${status}` });
-    fetchAll();
+    try {
+      const response = await fetch(`/api/service-requests/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = "Failed to update request";
+        try {
+          const body = JSON.parse(text);
+          message = body?.message || body?.error || text || message;
+        } catch {
+          message = text || message;
+        }
+        throw new Error(message);
+      }
+
+      toast({ title: `Request ${status}` });
+      fetchAll();
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message || "Could not update request", variant: "destructive" });
+    }
   };
 
   const deleteService = async (id: string) => {
-    await supabase.from("services").delete().eq("id", id);
-    toast({ title: "Service removed" });
-    fetchAll();
+    try {
+      const response = await fetch(`/api/services/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const text = await response.text();
+        let message = 'Failed to delete service';
+        try {
+          const body = JSON.parse(text);
+          message = body?.message || body?.error || text || message;
+        } catch {
+          message = text || message;
+        }
+        throw new Error(message);
+      }
+
+      toast({ title: 'Service removed' });
+      fetchAll();
+    } catch (err:any) {
+      toast({ title: 'Failed', description: err.message || 'Error deleting service', variant: 'destructive' });
+    }
   };
 
   const pendingReqs = requests.filter(r => r.status === "pending");
