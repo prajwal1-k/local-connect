@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, ArrowRight, Star, CheckCircle, Clock, Shield, Home, Sparkles, SprayCan, Settings, Monitor, Paintbrush, Truck, BookOpen, Menu, X } from "lucide-react";
+import { Search, ArrowRight, Star, CheckCircle, Clock, Shield, Home, Sparkles, SprayCan, Settings, Monitor, Paintbrush, Truck, BookOpen, Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeCarousel from "@/components/HomeCarousel";
@@ -78,9 +79,21 @@ export default function Index() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"} className="text-sm font-medium px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors">
-                  Dashboard
-                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <User className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}>Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile">Edit Profile</Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button variant="outline" size="sm" onClick={() => signOut()} className="text-sm font-semibold">
                   Log out
                 </Button>
@@ -152,14 +165,24 @@ export default function Index() {
                 Browse Services
               </Link>
               {user && (
-                <Link
-                  to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Settings className="h-4 w-4" />
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    to={role === "service_provider" ? "/provider-dashboard" : "/dashboard"}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Settings className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    Edit Profile
+                  </Link>
+                </>
               )}
               <div className="pt-2 mt-3 border-t border-border/50">
                 {user ? (

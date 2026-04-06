@@ -217,9 +217,11 @@ export default function ProviderDashboard() {
             </div>
             <span className="font-bold">Servixen</span>
           </Link>
-          <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate("/"); }}>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate("/"); }}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </nav>
 
