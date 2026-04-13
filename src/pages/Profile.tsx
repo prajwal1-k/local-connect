@@ -51,33 +51,55 @@ export default function Profile() {
         throw new Error("Not authenticated. Please log in again.");
       }
 
-      // Update profile with basic fields only
-      const { data, error } = await supabase
+      const profileData = {
+        user_id: user.id,
+        full_name: formData.full_name || "",
+        location: formData.location || "",
+        phone: formData.phone || "",
+        bio: formData.bio || "",
+        avatar_url: formData.avatar_url || "",
+      };
+
+      // First try to update
+      let { data, error } = await supabase
         .from("profiles")
         .update({
-          full_name: formData.full_name || "",
-          location: formData.location || "",
-          phone: formData.phone || "",
-          bio: formData.bio || "",
+          full_name: profileData.full_name,
+          location: profileData.location,
+          phone: profileData.phone,
+          bio: profileData.bio,
+          avatar_url: profileData.avatar_url,
         })
         .eq("user_id", user.id)
         .select();
 
-      if (error) {
+      // If update failed because row doesn't exist, try inserting
+      if (error && error.message.includes("violates")) {
+        const { data: insertData, error: insertError } = await supabase
+          .from("profiles")
+          .insert([profileData])
+          .select();
+
+        if (insertError) {
+          console.error("Profile insert error:", insertError);
+          throw new Error(insertError.message || "Failed to create profile.");
+        }
+        data = insertData;
+      } else if (error) {
         console.error("Profile update error:", error);
-        throw new Error(error.message || "Failed to update profile. Check your permissions.");
+        throw new Error(error.message || "Failed to update profile.");
       }
 
       if (!data || data.length === 0) {
-        throw new Error("Profile update failed - no data returned");
+        throw new Error("Profile save failed - no data returned");
       }
 
-      toast({ title: "Profile updated successfully!" });
+      toast({ title: "Profile saved successfully!" });
       refreshProfile(); // Refresh profile in context
     } catch (error: any) {
-      console.error("Update error details:", error);
+      console.error("Profile save error details:", error);
       toast({ 
-        title: "Failed to update profile", 
+        title: "Failed to save profile", 
         description: error.message || "Check your permissions and try again",
         variant: "destructive" 
       });
