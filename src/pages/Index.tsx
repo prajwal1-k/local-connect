@@ -14,7 +14,6 @@ import GrowSection from "@/components/GrowSection";
 import HeroBanner from "@/components/HeroBanner";
 import BusinessAIBanner from "@/components/BusinessAIBanner";
 import Logo from "@/assets/logo.png";
-
 const iconMap: Record<string, React.ReactNode> = {
   home: <Home className="h-8 w-8" />,
   sparkles: <Sparkles className="h-8 w-8" />,
@@ -66,9 +65,9 @@ export default function Index() {
             <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Home
             </Link>
-            {/* <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Services
-            </Link> */}
+            </Link>
             <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
@@ -224,6 +223,36 @@ export default function Index() {
       {/* <HeroBanner /> */}
       {/* Business AI Banner */}
       <BusinessAIBanner />
+
+      {/* Search Section */}
+      <section className="py-12 md:py-16 bg-gradient-to-r from-primary/5 to-accent/5">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-2xl mx-auto text-center"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Find the Perfect Service</h2>
+            <p className="text-muted-foreground mb-8">Search for trusted professionals in your area</p>
+            <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mx-auto">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search for plumber, electrician, tutor..."
+                  className="h-16 pl-12 pr-4 text-lg shadow-card border-2"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button type="submit" size="lg" className="h-16 px-8 text-lg font-semibold gradient-primary border-0 shadow-lg">
+                Search
+              </Button>
+            </form>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
         <div className="container mx-auto px-4">
@@ -240,27 +269,6 @@ export default function Index() {
                   Connect with verified professionals for home services, beauty, IT support, and more. Quality service at your doorstep.
                 </p>
               </motion.div>
-
-              <motion.form
-                onSubmit={handleSearch}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="mx-auto flex max-w-lg gap-2 md:mx-0"
-              >
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search for plumber, electrician, tutor..."
-                    className="h-12 pl-10 text-base shadow-card"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" size="lg" className="h-12 px-6 gradient-primary border-0">
-                  Search
-                </Button>
-              </motion.form>
             </div>
 
             <div>

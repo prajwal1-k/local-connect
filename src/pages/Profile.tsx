@@ -9,10 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Profile() {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
@@ -188,7 +190,11 @@ export default function Profile() {
           </Button>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">K</span>
+              {isMobile ? (
+                <User className="h-5 w-5 text-primary-foreground" />
+              ) : (
+                <span className="text-sm font-bold text-primary-foreground">K</span>
+              )}
             </div>
             <span className="font-bold">Servixen</span>
           </div>

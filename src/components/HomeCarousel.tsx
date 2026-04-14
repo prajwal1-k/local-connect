@@ -9,7 +9,8 @@ import slideDoctors from "@/assets/slide-doctors.jpg";
 import slideRealEstate from "@/assets/slide-realestate.jpg";
 import slideServices from "@/assets/slide-services.jpg";
 import slideTutorials from "@/assets/online-tutoing.png";
-
+import slideITConsulting from "@/assets/it-consultant.jpeg";
+import slideDigitalMarketing from "@/assets/digital-marketing.png";
 
 const slides = [
   {
@@ -41,7 +42,18 @@ const slides = [
     image: slideTutorials,
     title: "Online Tutoring",
     desc: "Connect with expert tutors for personalized learning",
+  },
+  {
+    image: slideITConsulting,
+    title: "IT Consulting",
+    desc: "Expert IT consulting for businesses of all sizes",
+  },
+  {
+    image: slideDigitalMarketing,
+    title: "Digital Marketing",
+    desc: "Boost your online presence with our marketing pros",
   }
+
 ];
 
 export default function HomeCarousel() {

@@ -6,9 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are the LocalConnect AI Assistant — a friendly, knowledgeable helper for the LocalConnect platform.
+const SYSTEM_PROMPT = `You are the Servixen AI Assistant — a friendly, knowledgeable helper for the Servixen platform.
 
-LocalConnect connects customers with verified local service providers across categories like home repairs, cleaning, healthcare, B2B solutions, and real estate.
+Servixen connects customers with verified local service providers across categories like home repairs, cleaning, healthcare, B2B solutions, and real estate.
 
 Key facts:
 - Users can browse services, send requests to providers, and rate their experience.

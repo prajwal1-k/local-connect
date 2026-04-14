@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import slideRepairs from "@/assets/b2b.jpeg";
 import slideB2B from "@/assets/it-consultant.jpeg";
 import slideDoctors from "@/assets/home-service.jpeg";
+import slideITConsulting from "@/assets/it-image.png";
 
 type Slide = {
   image: string;
@@ -15,6 +16,7 @@ const HERO_SLIDES: Slide[] = [
 
   { image: slideB2B, alt: "B2B solutions" },
   { image: slideDoctors, alt: "Healthcare" },
+  { image: slideITConsulting, alt: "IT consulting" },
 ];
 
 export default function HeroServicesCarousel() {

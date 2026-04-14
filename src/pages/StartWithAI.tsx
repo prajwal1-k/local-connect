@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Bot, 
   ArrowRight, 
+  ArrowLeft,
   Sparkles, 
   Search, 
   Zap,
@@ -20,62 +21,21 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock service providers data
-const mockProviders = [
-  {
-    id: 1,
-    name: "Pro Plumbing Solutions",
-    category: "Plumbing",
-    rating: 4.8,
-    reviews: 156,
-    price: "₹500",
-    distance: "2.3 km",
-    availability: "Available now",
-    image: "🔧",
-    match: 98,
-    isAIMatch: true,
-  },
-  {
-    id: 2,
-    name: "Spark Electricals",
-    category: "Electrical",
-    rating: 4.9,
-    reviews: 203,
-    price: "₹600",
-    distance: "1.8 km",
-    availability: "Today 2:00 PM",
-    image: "⚡",
-    match: 95,
-    isAIMatch: true,
-  },
-  {
-    id: 3,
-    name: "Clean Haven Services",
-    category: "Cleaning",
-    rating: 4.7,
-    reviews: 89,
-    price: "₹300",
-    distance: "3.1 km",
-    availability: "Tomorrow 10:00 AM",
-    image: "🧹",
-    match: 92,
-    isAIMatch: false,
-  },
-  {
-    id: 4,
-    name: "AC Cooling Experts",
-    category: "AC Repair",
-    rating: 4.6,
-    reviews: 124,
-    price: "₹800",
-    distance: "2.9 km",
-    availability: "Today 4:00 PM",
-    image: "❄️",
-    match: 88,
-    isAIMatch: false,
-  },
-];
+interface Provider {
+  id: string;
+  name: string;
+  category: string;
+  rating: number;
+  reviews: number;
+  price: string;
+  distance: string;
+  availability: string;
+  image: string;
+  match: number;
+  isAIMatch: boolean;
+}
 
 interface AgentStep {
   label: string;
@@ -90,6 +50,7 @@ export default function StartWithAI() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [agentSteps, setAgentSteps] = useState<AgentStep[]>([
     { label: "Finding services", icon: <Search className="h-4 w-4" />, completed: false, active: false },
     { label: "Comparing prices", icon: <IndianRupee className="h-4 w-4" />, completed: false, active: false },
@@ -97,6 +58,77 @@ export default function StartWithAI() {
     { label: "AI matching", icon: <Bot className="h-4 w-4" />, completed: false, active: false },
   ]);
   const [selectedFilter, setSelectedFilter] = useState("all");
+
+  useEffect(() => {
+    fetchProviders();
+  }, []);
+
+  const fetchProviders = async () => {
+    try {
+      // Fetch services from MongoDB backend
+      const servicesResponse = await fetch('/api/services');
+      const services = await servicesResponse.json();
+
+      // Fetch categories for category names
+      const { data: categories } = await supabase.from('categories').select('*');
+
+      // For each service, fetch provider profile and reviews
+      const providersData: Provider[] = await Promise.all(
+        services.map(async (service: any, index: number) => {
+          // Fetch provider profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', service.provider_id)
+            .single();
+
+          // Fetch reviews for this provider
+          const { data: reviews } = await supabase
+            .from('reviews')
+            .select('rating')
+            .eq('provider_id', service.provider_id);
+
+          // Calculate average rating
+          const avgRating = reviews && reviews.length > 0 
+            ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length 
+            : 4.5;
+
+          // Get category name
+          const category = categories?.find((cat: any) => cat.id === service.category_id);
+
+          // Mock some data for demo (distance, availability, etc.)
+          const mockData = [
+            { distance: "2.3 km", availability: "Available now", image: "🔧" },
+            { distance: "1.8 km", availability: "Today 2:00 PM", image: "⚡" },
+            { distance: "3.1 km", availability: "Tomorrow 10:00 AM", image: "🧹" },
+            { distance: "2.9 km", availability: "Today 4:00 PM", image: "❄️" },
+          ];
+
+          const mock = mockData[index % mockData.length];
+
+          return {
+            id: service._id || service.id,
+            name: profile?.full_name || service.title,
+            category: category?.name || 'General Service',
+            rating: Math.round(avgRating * 10) / 10,
+            reviews: reviews?.length || Math.floor(Math.random() * 200) + 50,
+            price: `₹${service.price}`,
+            distance: mock.distance,
+            availability: mock.availability,
+            image: mock.image,
+            match: 85 + Math.floor(Math.random() * 15), // Random match score
+            isAIMatch: index < 2, // First 2 are AI matches
+          };
+        })
+      );
+
+      setProviders(providersData);
+    } catch (error) {
+      console.error('Error fetching providers:', error);
+      // Fallback to some mock data if API fails
+      setProviders([]);
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,11 +163,28 @@ export default function StartWithAI() {
   };
 
   const filteredProviders = selectedFilter === "all" 
-    ? mockProviders 
-    : mockProviders.filter(p => p.category.toLowerCase() === selectedFilter.toLowerCase());
+    ? providers 
+    : providers.filter(p => p.category.toLowerCase() === selectedFilter.toLowerCase());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+        <div className="container mx-auto flex h-16 items-center gap-4 px-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
+              <Bot className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold">Servixen AI</span>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center px-4 py-20">
         {/* Gradient background elements */}
@@ -304,7 +353,7 @@ export default function StartWithAI() {
                   <Filter className="h-4 w-4 mr-2" />
                   All
                 </Button>
-                {["Plumbing", "Electrical", "Cleaning", "AC Repair"].map((cat) => (
+                {Array.from(new Set(providers.map(p => p.category))).map((cat) => (
                   <Button
                     key={cat}
                     variant={selectedFilter === cat.toLowerCase() ? "default" : "outline"}
