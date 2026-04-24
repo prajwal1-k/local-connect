@@ -136,7 +136,7 @@ export default function StartWithAI() {
 
     setIsSearching(true);
     setShowResults(false);
-    
+
     // Simulate AI agent progress
     const steps: AgentStep[] = [
       { label: "Finding services", icon: <Search className="h-4 w-4" />, completed: false, active: true },
@@ -158,12 +158,13 @@ export default function StartWithAI() {
       setAgentSteps([...newSteps]);
     }
 
+
     setIsSearching(false);
     setShowResults(true);
   };
 
-  const filteredProviders = selectedFilter === "all" 
-    ? providers 
+  const filteredProviders = selectedFilter === "all"
+    ? providers
     : providers.filter(p => p.category.toLowerCase() === selectedFilter.toLowerCase());
 
   return (
