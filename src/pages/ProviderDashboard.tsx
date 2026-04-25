@@ -76,7 +76,7 @@ export default function ProviderDashboard() {
     const serviceWithCategory = (svcs || []).map((svc: any) => ({ 
       ...svc, 
       id: svc._id, 
-      location: svc.location || '',
+      location: (svc.location || svc.service_location || '').trim(),
       categories: categoryMap.get(svc.category_id) || null 
     }));
     setMyServices(serviceWithCategory);

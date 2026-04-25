@@ -130,6 +130,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kodequant
     const BillingHistory = mongoose.model('BillingHistory', BillingHistorySchema);
 
     const TAX_RATE = 0.18;
+    const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
     const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
     const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
@@ -488,7 +489,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kodequant
             // Filter by location if specified
             if (req.query.location && req.query.location.trim()) {
                 const locationQuery = req.query.location.trim().toLowerCase();
-                services = services.filter(s => s.location && s.location.toLowerCase().includes(locationQuery));
+                services = services.filter(s => {
+                    const locationValue = (s.location || s.service_location || '').toString().trim().toLowerCase();
+                    return locationValue.includes(locationQuery);
+                });
             }
 
             const providerIds = [...new Set(services.map((s) => s.provider_id))];
@@ -797,7 +801,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kodequant
                 price: Number(req.body.price) || 0,
                 price_type: req.body.price_type || 'fixed',
                 experience_years: Number(req.body.experience_years) || 0,
-                location: req.body.location || '',
+                location: (req.body.location || req.body.service_location || '').toString().trim(),
                 is_active: req.body.is_active !== undefined ? req.body.is_active : true,
             };
             const service = new Service(payload);

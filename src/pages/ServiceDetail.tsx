@@ -61,7 +61,7 @@ export default function ServiceDetail() {
         return;
       }
 
-      setService({ ...svc, id: svc._id });
+      setService({ ...svc, id: svc._id, location: (svc.location || svc.service_location || '').trim() });
 
       const [{ data: prof }, { data: revs }, { data: categoryData }] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", svc.provider_id).single(),
