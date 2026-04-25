@@ -14,8 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { QRCodeCanvas } from "qrcode.react";
-import { Copy } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -42,6 +40,7 @@ export default function ProviderDashboard() {
   const [newPriceType, setNewPriceType] = useState("fixed");
   const [newCategory, setNewCategory] = useState("");
   const [newExperience, setNewExperience] = useState("");
+  const [newLocation, setNewLocation] = useState("");
   const [addingService, setAddingService] = useState(false);
 
   useEffect(() => {
@@ -74,7 +73,12 @@ export default function ProviderDashboard() {
     }
 
     const categoryMap = new Map((cats || []).map((c: any) => [c.id, c]));
-    const serviceWithCategory = (svcs || []).map((svc: any) => ({ ...svc, id: svc._id, categories: categoryMap.get(svc.category_id) || null }));
+    const serviceWithCategory = (svcs || []).map((svc: any) => ({ 
+      ...svc, 
+      id: svc._id, 
+      location: svc.location || '',
+      categories: categoryMap.get(svc.category_id) || null 
+    }));
     setMyServices(serviceWithCategory);
 
     try {
@@ -89,7 +93,8 @@ export default function ProviderDashboard() {
         const pMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
         setRequests(reqs.map((r: any) => ({
           ...r,
-          id: r._id || r.id,
+          id: r.id || r.uuid || r._id,
+          uuid: r.uuid || r.id || r._id,
           services: serviceWithCategory.find((svc) => svc.id === r.service_id) || null,
           taker_profile: pMap.get(r.taker_id) || null,
         })));
@@ -120,6 +125,7 @@ export default function ProviderDashboard() {
           price: Number(newPrice) || 0,
           price_type: newPriceType,
           experience_years: Number(newExperience) || 0,
+          location: newLocation.trim(),
         }),
       });
 
@@ -137,7 +143,7 @@ export default function ProviderDashboard() {
 
       toast({ title: 'Service added!' });
       setShowAddService(false);
-      setNewTitle(''); setNewDesc(''); setNewPrice(''); setNewExperience('');
+      setNewTitle(''); setNewDesc(''); setNewPrice(''); setNewExperience(''); setNewLocation('');
       await fetchAll();
     } catch (err:any) {
       toast({ title: 'Failed', description: err.message || 'Error adding service', variant: 'destructive' });
@@ -195,17 +201,25 @@ export default function ProviderDashboard() {
     }
   };
 
+  const markCashCollected = async (id: string) => {
+    try {
+      const response = await fetch(`/api/service-requests/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mark_cash_collected: true }),
+      });
+      if (!response.ok) throw new Error("Failed to mark cash collected");
+      toast({ title: "COD marked as collected" });
+      fetchAll();
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message || "Could not mark cash collection", variant: "destructive" });
+    }
+  };
+
   const pendingReqs = requests.filter(r => r.status === "pending");
   const activeReqs = requests.filter(r => r.status === "accepted");
   const pastReqs = requests.filter(r => ["completed", "rejected", "cancelled"].includes(r.status));
   const avgRating = reviews.length ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;
-
-  const shareUrl = `${window.location.origin}/provider/${user?.id}`;
-
-  const copyLink = () => {
-  navigator.clipboard.writeText(shareUrl);
-  toast({ title: "Link copied!" });
-};
 
   return (
     <div className="min-h-screen bg-background">
@@ -240,6 +254,22 @@ export default function ProviderDashboard() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="mb-8 rounded-3xl border border-border bg-card p-6 shadow-card">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Provider tools</p>
+              <h2 className="mt-2 text-2xl font-bold">Subscription & billing</h2>
+              <p className="text-sm text-muted-foreground">Quickly manage your plan, billing history, and usage from one place.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => navigate('/provider-dashboard/subscription')}>Subscription</Button>
+              <Button variant="outline" onClick={() => navigate('/provider-dashboard/billing')}>Billing</Button>
+              <Button variant="outline" onClick={() => navigate('/provider-dashboard/usage')}>Usage</Button>
+              <Button className="gradient-primary border-0" onClick={() => navigate('/provider-dashboard/upgrade-plan')}>Upgrade Plan</Button>
+            </div>
+          </div>
         </div>
 
         <Tabs defaultValue="requests">
@@ -283,9 +313,11 @@ export default function ProviderDashboard() {
                           </div>
                         )}
                         {req.status === "accepted" && (
-                          <Button size="sm" variant="outline" onClick={() => updateRequestStatus(req.id, "completed")}>
-                            <CheckCircle className="mr-1 h-3 w-3" /> Mark Completed
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => updateRequestStatus(req.id, "completed")}>
+                              <CheckCircle className="mr-1 h-3 w-3" /> Mark Completed
+                            </Button>
+                          </div>
                         )}
                       </CardContent>
                     </Card>
@@ -344,6 +376,10 @@ export default function ProviderDashboard() {
                       <Label>Years of Experience</Label>
                       <Input type="number" placeholder="3" value={newExperience} onChange={(e) => setNewExperience(e.target.value)} min={0} />
                     </div>
+                    <div className="space-y-2">
+                      <Label>Service Location</Label>
+                      <Input placeholder="e.g. Bangalore, Karnataka" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} maxLength={100} />
+                    </div>
                     <Button className="w-full gradient-primary border-0" onClick={addService} disabled={addingService}>
                       {addingService ? "Adding..." : "Add Service"}
                     </Button>
@@ -369,6 +405,7 @@ export default function ProviderDashboard() {
                       </div>
                       <h3 className="font-semibold">{s.title}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2">{s.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">📍 {s.location?.trim() ? s.location : "Location not specified"}</p>
                       <p className="mt-2 font-bold text-primary">₹{s.price} / {s.price_type}</p>
                     </CardContent>
                   </Card>
@@ -432,6 +469,7 @@ export default function ProviderDashboard() {
               </div>
             )}
           </TabsContent>
+
         </Tabs>
       </div>
     </div>

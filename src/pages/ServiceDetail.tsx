@@ -131,49 +131,77 @@ export default function ServiceDetail() {
     if (!user || !service) return;
     setSubmittingReview(true);
 
-    // Find a completed request by this user for this service
-    const { data: completedRequests } = await supabase
-      .from("service_requests")
-      .select("id")
-      .eq("taker_id", user.id)
-      .eq("service_id", service.id)
-      .eq("status", "completed")
-      .limit(1);
+    try {
+      const response = await fetch(
+        `/api/service-requests?service_id=${encodeURIComponent(service.id)}&taker_id=${encodeURIComponent(user.id)}&status=completed`
+      );
 
-    if (!completedRequests || completedRequests.length === 0) {
-      toast({ title: "You need a completed booking with this service before leaving a review.", variant: "destructive" });
-      setSubmittingReview(false);
-      return;
-    }
+      if (!response.ok) {
+        const text = await response.text();
+        let message = "Failed to verify completed booking";
+        try {
+          const body = JSON.parse(text);
+          message = body?.message || body?.error || text || message;
+        } catch {
+          message = text || message;
+        }
+        throw new Error(message);
+      }
 
-    const { data: existingReview } = await supabase
-      .from("reviews")
-      .select("id")
-      .eq("request_id", completedRequests[0].id)
-      .eq("reviewer_id", user.id)
-      .maybeSingle();
+      const completedRequests = await response.json();
+      if (!Array.isArray(completedRequests) || completedRequests.length === 0) {
+        toast({
+          title: "Review not allowed yet",
+          description: "A completed booking is required before leaving a review.",
+          variant: "destructive",
+        });
+        setSubmittingReview(false);
+        return;
+      }
 
-    if (existingReview) {
-      toast({ title: "You already reviewed this service.", variant: "destructive" });
-      setSubmittingReview(false);
-      return;
-    }
+      const requestId = completedRequests[0].id;
+      
+      if (!requestId) {
+        throw new Error("Invalid request ID - cannot submit review without a valid booking ID");
+      }
 
-    const { error } = await supabase.from("reviews").insert({
-      request_id: completedRequests[0].id,
-      reviewer_id: user.id,
-      provider_id: service.provider_id,
-      rating: reviewRating,
-      comment: reviewComment.trim(),
-    });
-    setSubmittingReview(false);
-    if (error) {
-      toast({ title: "Failed to submit review", description: error.message, variant: "destructive" });
-    } else {
+      const { data: existingReview, error: reviewSearchError } = await supabase
+        .from("reviews")
+        .select("id")
+        .eq("request_id", requestId)
+        .eq("reviewer_id", user.id)
+        .maybeSingle();
+
+      if (reviewSearchError) {
+        throw new Error(reviewSearchError.message);
+      }
+
+      if (existingReview) {
+        toast({ title: "You already reviewed this service.", variant: "destructive" });
+        setSubmittingReview(false);
+        return;
+      }
+
+      const { error } = await supabase.from("reviews").insert({
+        request_id: requestId,
+        reviewer_id: user.id,
+        provider_id: service.provider_id,
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
       toast({ title: "Review submitted!" });
       setReviewComment("");
       setReviewRating(5);
       fetchData();
+    } catch (err: any) {
+      toast({ title: "Failed to submit review", description: err.message || "Please try again later.", variant: "destructive" });
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -202,6 +230,9 @@ export default function ServiceDetail() {
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-primary">₹{service.price}</span>
                 <span className="text-sm text-muted-foreground">/ {service.price_type}</span>
+              </div>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" /> {service.location?.trim() ? service.location : "Location not specified"}
               </div>
               {service.experience_years ? (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">

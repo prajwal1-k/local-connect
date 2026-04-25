@@ -23,6 +23,7 @@ interface ServiceWithProvider {
   provider_id: string;
   provider_name: string;
   provider_location: string;
+  service_location: string;
   category_name: string;
   avg_rating: number;
   review_count: number;
@@ -30,14 +31,14 @@ interface ServiceWithProvider {
 
 export default function Services() {
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [services, setServices] = useState<ServiceWithProvider[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [bookingServiceId, setBookingServiceId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
+  const [selectedLocation, setSelectedLocation] = useState(searchParams.get("location") || "");
 
   useEffect(() => {
     supabase.from("categories").select("*").then(({ data }) => setCategories(data || []));
@@ -45,7 +46,7 @@ export default function Services() {
 
   useEffect(() => {
     fetchServices();
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedLocation]);
 
   const fetchServices = async () => {
     setLoading(true);
@@ -54,6 +55,9 @@ export default function Services() {
       queryParams.set("is_active", "true");
       if (selectedCategory && selectedCategory !== "all") {
         queryParams.set("category_id", selectedCategory);
+      }
+      if (selectedLocation && selectedLocation.trim()) {
+        queryParams.set("location", selectedLocation.trim());
       }
 
       const servicesResponse = await fetch(`/api/services?${queryParams.toString()}`);
@@ -95,6 +99,7 @@ export default function Services() {
           provider_id: s.provider_id,
           provider_name: profile?.full_name || "Provider",
           provider_location: profile?.location || "",
+          service_location: s.location || "",
           category_name: categoryMap.get(s.category_id) || "",
           avg_rating: rating ? Math.round((rating.sum / rating.count) * 10) / 10 : 0,
           review_count: rating?.count || 0,
@@ -110,57 +115,13 @@ export default function Services() {
     }
   };
 
-  const bookService = async (service: ServiceWithProvider) => {
-    if (!user) {
-      toast({ title: "Login needed", description: "Please log in to book a service", variant: "destructive" });
-      return;
-    }
-
-    if (role !== "service_taker") {
-      toast({ title: "Access denied", description: "Only service takers can book requests", variant: "destructive" });
-      return;
-    }
-
-    setBookingServiceId(service.id);
-    try {
-      const response = await fetch("/api/service-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          taker_id: user.id,
-          provider_id: service.provider_id,
-          service_id: service.id,
-          description: `Booking from services listing: ${service.title}`,
-          address: "",
-        }),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        let message = "Failed to create request";
-        try {
-          const body = JSON.parse(text);
-          message = body?.message || body?.error || text || message;
-        } catch {
-          message = text || message;
-        }
-        throw new Error(message);
-      }
-
-      toast({ title: "Request sent", description: "Provider can now see this booking request." });
-    } catch (err:any) {
-      toast({ title: "Booking failed", description: err.message || "Could not create service request", variant: "destructive" });
-    } finally {
-      setBookingServiceId(null);
-    }
-  };
-
   const filtered = services.filter(s =>
     !searchQuery.trim() ||
     s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.provider_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.category_name.toLowerCase().includes(searchQuery.toLowerCase())
+    s.category_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.service_location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
 
@@ -189,15 +150,41 @@ export default function Services() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={selectedCategory} onValueChange={(v) => { setSelectedCategory(v); setSearchParams(v === "all" ? {} : { category: v }); }}>
-            <SelectTrigger className="w-full md:w-56">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 md:w-auto">
+            <Input
+              placeholder="Enter city..."
+              className="w-full md:w-40"
+              value={selectedLocation}
+              onChange={(e) => {
+                setSelectedLocation(e.target.value);
+                const params = new URLSearchParams(searchParams);
+                if (e.target.value.trim()) {
+                  params.set("location", e.target.value.trim());
+                } else {
+                  params.delete("location");
+                }
+                setSearchParams(params);
+              }}
+            />
+            <Select value={selectedCategory} onValueChange={(v) => {
+              setSelectedCategory(v);
+              const params = new URLSearchParams(searchParams);
+              if (v === "all") {
+                params.delete("category");
+              } else {
+                params.set("category", v);
+              }
+              setSearchParams(params);
+            }}>
+              <SelectTrigger className="w-full md:w-56">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {loading ? (
@@ -232,7 +219,7 @@ export default function Services() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="h-3.5 w-3.5" />
-                          <span>{service.provider_location || "Any location"}</span>
+                          <span>{service.service_location?.trim() ? service.service_location : (service.provider_location?.trim() ? service.provider_location : "Location not specified")}</span>
                         </div>
                         <span className="font-bold text-primary">
                           ₹{service.price}{service.price_type === "hourly" ? "/hr" : ""}
@@ -245,11 +232,6 @@ export default function Services() {
                         </div>
                       ) : null}
                     </Link>
-                    {role === "service_taker" && (
-                      <Button className="mt-4 w-full gradient-primary border-0" onClick={() => bookService(service)} disabled={bookingServiceId === service.id}>
-                        {bookingServiceId === service.id ? "Requesting..." : "Book Service"}
-                      </Button>
-                    )}
                   </CardContent>
                 </Card>
               </motion.div>

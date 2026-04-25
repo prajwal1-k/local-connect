@@ -76,7 +76,7 @@ export default function Profile() {
         .select();
 
       // If update failed because row doesn't exist, try inserting
-      if (error && error.message.includes("violates")) {
+      if (error && (error.message.includes("violates") || error.code === 'PGRST116')) {
         const { data: insertData, error: insertError } = await supabase
           .from("profiles")
           .insert([profileData])

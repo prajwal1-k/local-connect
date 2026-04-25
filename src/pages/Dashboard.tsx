@@ -81,7 +81,11 @@ export default function Dashboard() {
   };
 
   const submitReview = async (request: any) => {
-    if (!user) return;
+    if (!user || !request?.id) {
+      toast({ title: "Error", description: "Invalid request information", variant: "destructive" });
+      return;
+    }
+
     const { error } = await supabase.from("reviews").insert({
       request_id: request.id,
       reviewer_id: user.id,

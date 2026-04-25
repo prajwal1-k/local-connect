@@ -116,11 +116,11 @@ export default function Signup() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" placeholder="+91 98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} />
+              <Input id="phone" type="tel" placeholder="+91 98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input id="location" placeholder="City, State" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={100} />
+              <Input id="location" placeholder="City, State" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={100} required/>
             </div>
             {role === "service_provider" && (
               <div className="space-y-2">

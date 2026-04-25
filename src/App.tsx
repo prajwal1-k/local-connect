@@ -16,7 +16,12 @@ import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 import Profile from "./pages/Profile";
 import StartWithAI from "./pages/StartWithAI";
+import ProviderSubscription from "./pages/ProviderSubscription";
+import ProviderBilling from "./pages/ProviderBilling";
+import ProviderUsage from "./pages/ProviderUsage";
+import Pricing from "./pages/Pricing";
 import AiChatbot from "@/components/AiChatbot";
+import AdminDashboard from "./pages/AdminDashboard";
 
 
 const queryClient = new QueryClient();
@@ -39,7 +44,13 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+            <Route path="/provider-dashboard/subscription" element={<ProviderSubscription />} />
+            <Route path="/provider-dashboard/billing" element={<ProviderBilling />} />
+            <Route path="/provider-dashboard/usage" element={<ProviderUsage />} />
+            <Route path="/provider-dashboard/upgrade-plan" element={<Pricing />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/start-with-ai" element={<StartWithAI />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
             <AiChatbot />
