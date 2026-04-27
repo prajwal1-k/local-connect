@@ -151,21 +151,24 @@ export default function Services() {
             />
           </div>
           <div className="flex gap-2 md:w-auto">
-            <Input
-              placeholder="Enter city..."
-              className="w-full md:w-40"
-              value={selectedLocation}
-              onChange={(e) => {
-                setSelectedLocation(e.target.value);
-                const params = new URLSearchParams(searchParams);
-                if (e.target.value.trim()) {
-                  params.set("location", e.target.value.trim());
-                } else {
-                  params.delete("location");
-                }
-                setSearchParams(params);
-              }}
-            />
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Enter city..."
+                className="w-full md:w-40 pl-10"
+                value={selectedLocation}
+                onChange={(e) => {
+                  setSelectedLocation(e.target.value);
+                  const params = new URLSearchParams(searchParams);
+                  if (e.target.value.trim()) {
+                    params.set("location", e.target.value.trim());
+                  } else {
+                    params.delete("location");
+                  }
+                  setSearchParams(params);
+                }}
+              />
+            </div>
             <Select value={selectedCategory} onValueChange={(v) => {
               setSelectedCategory(v);
               const params = new URLSearchParams(searchParams);

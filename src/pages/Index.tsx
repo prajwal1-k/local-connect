@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, ArrowRight, Star, CheckCircle, Clock, Shield, Home, Sparkles, SprayCan, Settings, Monitor, Paintbrush, Truck, BookOpen, Menu, X, User } from "lucide-react";
+import { Search, ArrowRight, Star, CheckCircle, Clock, Shield, Home, Sparkles, SprayCan, Settings, Monitor, Paintbrush, Truck, BookOpen, Menu, X, User, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +35,7 @@ const steps = [
 export default function Index() {
   const [categories, setCategories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
@@ -45,7 +46,10 @@ export default function Index() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) navigate(`/services?search=${encodeURIComponent(searchQuery)}`);
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    if (selectedLocation.trim()) params.set("location", selectedLocation.trim());
+    navigate(`/services?${params.toString()}`);
   };
 
   return (
@@ -231,11 +235,11 @@ export default function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="max-w-2xl mx-auto text-center"
+            className="max-w-3xl mx-auto text-center"
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Find the Perfect Service</h2>
             <p className="text-muted-foreground mb-8">Search for trusted professionals in your area</p>
-            <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mx-auto">
+            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3 max-w-4xl mx-auto">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -245,7 +249,16 @@ export default function Index() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button type="submit" size="lg" className="h-16 px-8 text-lg font-semibold gradient-primary border-0 shadow-lg">
+              <div className="relative flex-1 md:max-w-xs">
+                <MapPin className="absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Enter city..."
+                  className="h-16 pl-12 pr-4 text-lg shadow-card border-2"
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                />
+              </div>
+              <Button type="submit" size="lg" className="h-16 px-8 text-lg font-semibold gradient-primary border-0 shadow-lg md:w-auto w-full">
                 Search
               </Button>
             </form>

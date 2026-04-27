@@ -405,7 +405,7 @@ export default function ProviderDashboard() {
                       </div>
                       <h3 className="font-semibold">{s.title}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2">{s.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1">📍 {s.location?.trim() ? s.location : "Location not specified"}</p>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="h-3 w-3" /> {s.location?.trim() ? s.location : "Location not specified"}</p>
                       <p className="mt-2 font-bold text-primary">₹{s.price} / {s.price_type}</p>
                     </CardContent>
                   </Card>
