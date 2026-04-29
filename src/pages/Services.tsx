@@ -218,6 +218,7 @@ export default function Services() {
                         )}
                       </div>
                       <h3 className="mb-1 text-lg font-semibold group-hover:text-primary transition-colors">{service.title}</h3>
+                      <p className="mb-1 text-sm text-foreground/80">By {service.provider_name || 'Provider'}</p>
                       <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">{service.description}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">

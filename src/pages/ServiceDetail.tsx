@@ -261,6 +261,11 @@ export default function ServiceDetail() {
                         <MapPin className="h-3 w-3" /> {provider.location}
                       </p>
                     )}
+                    {provider.phone && (
+                      <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <span className="font-medium">Phone:</span> {provider.phone}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {provider.bio && <p className="mt-3 text-sm text-muted-foreground">{provider.bio}</p>}

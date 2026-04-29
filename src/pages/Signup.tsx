@@ -24,6 +24,7 @@ export default function Signup() {
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
   const [bio, setBio] = useState("");
+  const [website, setWebsite] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
@@ -37,7 +38,7 @@ export default function Signup() {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email.trim(), password, fullName.trim(), role, { phone, location, bio });
+    const { error } = await signUp(email.trim(), password, fullName.trim(), role, { phone, location, bio, website });
     setLoading(false);
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
@@ -126,6 +127,12 @@ export default function Signup() {
               <div className="space-y-2">
                 <Label htmlFor="bio">About Your Services</Label>
                 <Textarea id="bio" placeholder="Describe your experience and services..." value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} />
+              </div>
+            )}
+            {role === "service_provider" && (
+              <div className="space-y-2">
+                <Label htmlFor="website">Website (Optional)</Label>
+                <Input id="website" type="url" placeholder="https://yourwebsite.com" value={website} onChange={(e) => setWebsite(e.target.value)} maxLength={255} />
               </div>
             )}
             <Button type="submit" className="w-full gradient-primary border-0" size="lg" disabled={loading}>

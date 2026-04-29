@@ -35,6 +35,7 @@ interface Provider {
   image: string;
   match: number;
   isAIMatch: boolean;
+  location: string;
 }
 
 interface AgentStep {
@@ -58,6 +59,7 @@ export default function StartWithAI() {
     { label: "AI matching", icon: <Bot className="h-4 w-4" />, completed: false, active: false },
   ]);
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [searchLocation, setSearchLocation] = useState("");
 
   useEffect(() => {
     fetchProviders();
@@ -105,6 +107,7 @@ export default function StartWithAI() {
           ];
 
           const mock = mockData[index % mockData.length];
+          const location = (service.location || profile?.location || "Unknown location").trim();
 
           return {
             id: service._id || service.id,
@@ -118,6 +121,7 @@ export default function StartWithAI() {
             image: mock.image,
             match: 85 + Math.floor(Math.random() * 15), // Random match score
             isAIMatch: index < 2, // First 2 are AI matches
+            location,
           };
         })
       );
@@ -130,10 +134,21 @@ export default function StartWithAI() {
     }
   };
 
+  const extractSearchLocation = (query: string) => {
+    const normalized = query.toLowerCase();
+    const pattern = /\b(?:in|at|near|around|from)\s+([a-z\s]+?)(?:\s+(?:for|to|with|who|that|as|and|on|by)\b|[?.!]|$)/i;
+    const match = normalized.match(pattern);
+    if (match?.[1]) {
+      return match[1].trim();
+    }
+    return "";
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
+    setSearchLocation(extractSearchLocation(searchQuery));
     setIsSearching(true);
     setShowResults(false);
 
@@ -163,9 +178,11 @@ export default function StartWithAI() {
     setShowResults(true);
   };
 
-  const filteredProviders = selectedFilter === "all"
-    ? providers
-    : providers.filter(p => p.category.toLowerCase() === selectedFilter.toLowerCase());
+  const filteredProviders = providers.filter((p) => {
+    const categoryMatches = selectedFilter === "all" || p.category.toLowerCase() === selectedFilter.toLowerCase();
+    const locationMatches = !searchLocation || p.location.toLowerCase().includes(searchLocation.toLowerCase());
+    return categoryMatches && locationMatches;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -338,9 +355,10 @@ export default function StartWithAI() {
               <div className="mb-8">
                 <h2 className="text-3xl font-bold mb-2">
                   AI-Matched Services for <span className="text-primary">"{searchQuery}"</span>
+                  {searchLocation ? <span className="text-base text-muted-foreground"> in {searchLocation}</span> : null}
                 </h2>
                 <p className="text-muted-foreground">
-                  {filteredProviders.length} providers found, ranked by AI match score
+                  {filteredProviders.length} providers found{searchLocation ? ` around ${searchLocation}` : ''}, ranked by AI match score
                 </p>
               </div>
 
@@ -415,7 +433,7 @@ export default function StartWithAI() {
                         <div className="space-y-2 mb-4">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <MapPin className="h-3 w-3" />
-                            {provider.distance}
+                            {provider.location || provider.distance}
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="h-3 w-3" />

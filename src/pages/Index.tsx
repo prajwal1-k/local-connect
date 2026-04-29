@@ -35,7 +35,7 @@ const steps = [
 export default function Index() {
   const [categories, setCategories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState(() => localStorage.getItem("userLocation") || "");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
@@ -43,6 +43,10 @@ export default function Index() {
   useEffect(() => {
     supabase.from("categories").select("*").then(({ data }) => setCategories(data || []));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("userLocation", selectedLocation);
+  }, [selectedLocation]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         phone: extra?.phone || "",
         location: extra?.location || "",
         bio: extra?.bio || "",
+        website: extra?.website || "",
       }).eq("user_id", data.user.id);
       await fetchUserData(data.user.id);
     }
