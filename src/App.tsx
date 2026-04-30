@@ -19,6 +19,7 @@ import StartWithAI from "./pages/StartWithAI";
 import ProviderSubscription from "./pages/ProviderSubscription";
 import ProviderBilling from "./pages/ProviderBilling";
 import ProviderUsage from "./pages/ProviderUsage";
+import ProviderPublicPage from "./pages/ProviderPublicPage";
 import Pricing from "./pages/Pricing";
 import AiChatbot from "@/components/AiChatbot";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+            <Route path="/provider/:id" element={<ProviderPublicPage />} />
             <Route path="/provider-dashboard/subscription" element={<ProviderSubscription />} />
             <Route path="/provider-dashboard/billing" element={<ProviderBilling />} />
             <Route path="/provider-dashboard/usage" element={<ProviderUsage />} />

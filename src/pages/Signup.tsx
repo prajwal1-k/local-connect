@@ -126,7 +126,7 @@ export default function Signup() {
             {role === "service_provider" && (
               <div className="space-y-2">
                 <Label htmlFor="bio">About Your Services</Label>
-                <Textarea id="bio" placeholder="Describe your experience and services..." value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} />
+                <Textarea id="bio" placeholder="Describe your experience and services..." value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} required/>
               </div>
             )}
             {role === "service_provider" && (

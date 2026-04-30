@@ -84,7 +84,7 @@ export type Database = {
           id: string
           provider_id: string
           rating: number
-          request_id: string
+          request_id: string | null
           reviewer_id: string
         }
         Insert: {
@@ -93,7 +93,7 @@ export type Database = {
           id?: string
           provider_id: string
           rating: number
-          request_id: string
+          request_id?: string | null
           reviewer_id: string
         }
         Update: {
@@ -102,7 +102,7 @@ export type Database = {
           id?: string
           provider_id?: string
           rating?: number
-          request_id?: string
+          request_id?: string | null
           reviewer_id?: string
         }
         Relationships: [

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -201,20 +200,17 @@ export default function Profile() {
         </div>
       </nav>
 
-      <div className="container mx-auto max-w-2xl px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <User className="h-8 w-8" />
-            Edit Profile
-          </h1>
-          <p className="text-muted-foreground">Update your personal information</p>
-        </div>
+      <div className="min-h-[calc(100vh-4rem)] w-full px-4 py-0">
+        <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col justify-between px-4 py-10">
+          <div className="space-y-6 rounded-[2rem] border border-border/60 bg-background/90 p-8 shadow-none backdrop-blur-xl">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <User className="h-8 w-8" />
+                Edit Profile
+              </h1>
+              <p className="text-muted-foreground mt-2">Update your personal information</p>
+            </div>
 
-        <Card className="border-0 shadow-card">
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-          </CardHeader>
-          <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Avatar Section */}
               <div className="space-y-2">
@@ -311,8 +307,8 @@ export default function Profile() {
               </Button>
               <p className="text-xs text-muted-foreground text-center">Saves name, location, phone, and bio to your profile.</p>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

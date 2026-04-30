@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Plus, LogOut, MapPin, Calendar, Check, X, CheckCircle, Trash2 } from "lucide-react";
+import { Star, Plus, LogOut, MapPin, Calendar, Check, X, CheckCircle, Trash2, Copy } from "lucide-react";
+import { QRCodeCanvas } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,10 +43,24 @@ export default function ProviderDashboard() {
   const [newExperience, setNewExperience] = useState("");
   const [newLocation, setNewLocation] = useState("");
   const [addingService, setAddingService] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [canNativeShare, setCanNativeShare] = useState(false);
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
     fetchAll();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setShareUrl("");
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      setShareUrl(`${window.location.origin}/provider/${user.id}`);
+      setCanNativeShare("share" in navigator);
+    }
   }, [user]);
 
   const fetchAll = async () => {
@@ -201,6 +216,32 @@ export default function ProviderDashboard() {
     }
   };
 
+  const copyShareLink = async () => {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: "Profile link copied", description: "Share this link with customers." });
+    } catch (error: any) {
+      toast({ title: "Copy failed", description: error?.message || "Unable to copy link.", variant: "destructive" });
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (!shareUrl || !canNativeShare) return;
+
+    try {
+      await navigator.share({
+        title: "My Servixen provider profile",
+        text: "View my provider profile and book services.",
+        url: shareUrl,
+      });
+    } catch (error) {
+      // user may have cancelled; swallow silently
+      console.warn(error);
+    }
+  };
+
   const markCashCollected = async (id: string) => {
     try {
       const response = await fetch(`/api/service-requests/${id}`, {
@@ -271,6 +312,40 @@ export default function ProviderDashboard() {
             </div>
           </div>
         </div>
+
+        <Card className="mb-8 border-0 shadow-card">
+          <CardHeader>
+            <CardTitle>Share your provider profile</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6 p-6 lg:grid-cols-[200px_1fr]">
+            <div className="flex items-center justify-center rounded-3xl border border-border bg-background p-4">
+              {shareUrl ? (
+                <QRCodeCanvas value={shareUrl} size={164} bgColor="#ffffff" fgColor="#0f172a" level="M" includeMargin={false} />
+              ) : (
+                <p className="text-sm text-muted-foreground">Share link not ready yet</p>
+              )}
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Customers can scan this QR code or use the direct link to open your public provider profile and book your services.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Input value={shareUrl} readOnly className="min-w-0" />
+                <Button className="w-full sm:w-auto" variant="outline" onClick={copyShareLink}>
+                  <Copy className="mr-2 h-4 w-4" />Copy link
+                </Button>
+                {canNativeShare && (
+                  <Button className="w-full sm:w-auto" onClick={handleNativeShare}>
+                    Share
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Use this share card when you want customers to quickly access your provider profile from a mobile device or desktop browser.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Tabs defaultValue="requests">
           <TabsList className="mb-6">

@@ -132,43 +132,10 @@ export default function ServiceDetail() {
     setSubmittingReview(true);
 
     try {
-      const response = await fetch(
-        `/api/service-requests?service_id=${encodeURIComponent(service.id)}&taker_id=${encodeURIComponent(user.id)}&status=completed`
-      );
-
-      if (!response.ok) {
-        const text = await response.text();
-        let message = "Failed to verify completed booking";
-        try {
-          const body = JSON.parse(text);
-          message = body?.message || body?.error || text || message;
-        } catch {
-          message = text || message;
-        }
-        throw new Error(message);
-      }
-
-      const completedRequests = await response.json();
-      if (!Array.isArray(completedRequests) || completedRequests.length === 0) {
-        toast({
-          title: "Review not allowed yet",
-          description: "A completed booking is required before leaving a review.",
-          variant: "destructive",
-        });
-        setSubmittingReview(false);
-        return;
-      }
-
-      const requestId = completedRequests[0].id;
-      
-      if (!requestId) {
-        throw new Error("Invalid request ID - cannot submit review without a valid booking ID");
-      }
-
       const { data: existingReview, error: reviewSearchError } = await supabase
         .from("reviews")
         .select("id")
-        .eq("request_id", requestId)
+        .eq("provider_id", service.provider_id)
         .eq("reviewer_id", user.id)
         .maybeSingle();
 
@@ -177,13 +144,12 @@ export default function ServiceDetail() {
       }
 
       if (existingReview) {
-        toast({ title: "You already reviewed this service.", variant: "destructive" });
+        toast({ title: "You already reviewed this provider.", description: "You can only leave one review per provider.", variant: "destructive" });
         setSubmittingReview(false);
         return;
       }
 
       const { error } = await supabase.from("reviews").insert({
-        request_id: requestId,
         reviewer_id: user.id,
         provider_id: service.provider_id,
         rating: reviewRating,
@@ -194,7 +160,7 @@ export default function ServiceDetail() {
         throw new Error(error.message);
       }
 
-      toast({ title: "Review submitted!" });
+      toast({ title: "Review submitted!", description: "Thank you for your feedback!" });
       setReviewComment("");
       setReviewRating(5);
       fetchData();
@@ -249,26 +215,60 @@ export default function ServiceDetail() {
             </div>
 
             {provider && (
-              <div className="mb-6 rounded-xl border border-border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full gradient-primary text-primary-foreground font-bold text-lg">
-                    {provider.full_name?.[0]?.toUpperCase() || "P"}
+              <div className="mb-6 rounded-3xl border border-border p-6 bg-background/90">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary-foreground text-3xl font-bold">
+                    {provider.avatar_url ? (
+                      <img
+                        src={provider.avatar_url}
+                        alt={provider.full_name || "Provider avatar"}
+                        className="h-20 w-20 rounded-3xl object-cover"
+                      />
+                    ) : (
+                      provider.full_name?.[0]?.toUpperCase() || "P"
+                    )}
                   </div>
-                  <div>
-                    <p className="font-semibold">{provider.full_name}</p>
-                    {provider.location && (
-                      <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-3 w-3" /> {provider.location}
-                      </p>
-                    )}
-                    {provider.phone && (
-                      <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <span className="font-medium">Phone:</span> {provider.phone}
-                      </p>
-                    )}
+                  <div className="min-w-0">
+                    <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Provider details</p>
+                    <p className="text-2xl font-semibold text-foreground leading-tight">{provider.full_name}</p>
+                    <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
+                      {provider.bio || "No provider description is available yet. Please contact the provider for more information."}
+                    </p>
                   </div>
                 </div>
-                {provider.bio && <p className="mt-3 text-sm text-muted-foreground">{provider.bio}</p>}
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-border bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Location</p>
+                    <p className="mt-2 font-medium text-foreground">{provider.location?.trim() || "Not specified"}</p>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Phone</p>
+                    <p className="mt-2 font-medium text-foreground">{provider.phone?.trim() || "Not specified"}</p>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Website</p>
+                    {provider.website ? (
+                      <a
+                        href={provider.website.startsWith("http") ? provider.website : `https://${provider.website}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 block font-medium text-primary hover:underline"
+                      >
+                        {provider.website}
+                      </a>
+                    ) : (
+                      <p className="mt-2 font-medium text-foreground">Not specified</p>
+                    )}
+                  </div>
+                  <div className="rounded-2xl border border-border bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Rating</p>
+                    <p className="mt-2 flex items-center gap-2 font-medium text-foreground">
+                      <Star className="h-4 w-4 fill-accent text-accent" />
+                      {avgRating > 0 ? `${avgRating} / 5 (${reviews.length} reviews)` : "No reviews yet"}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 

@@ -36,6 +36,9 @@ interface Provider {
   match: number;
   isAIMatch: boolean;
   location: string;
+  bio?: string;
+  phone?: string;
+  avatar_url?: string;
 }
 
 interface AgentStep {
@@ -122,6 +125,9 @@ export default function StartWithAI() {
             match: 85 + Math.floor(Math.random() * 15), // Random match score
             isAIMatch: index < 2, // First 2 are AI matches
             location,
+            bio: profile?.bio || "",
+            phone: profile?.phone || "",
+            avatar_url: profile?.avatar_url || "",
           };
         })
       );
@@ -406,9 +412,17 @@ export default function StartWithAI() {
                         )}
 
                         {/* Provider Avatar */}
-                        <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
-                          {provider.image}
-                        </div>
+                        {provider.avatar_url ? (
+                          <img
+                            src={provider.avatar_url}
+                            alt={provider.name}
+                            className="mb-3 h-20 w-20 rounded-3xl object-cover"
+                          />
+                        ) : (
+                          <div className="mb-3 text-4xl group-hover:scale-110 transition-transform">
+                            {provider.image}
+                          </div>
+                        )}
 
                         {/* Provider Info */}
                         <h3 className="font-semibold text-foreground mb-1 line-clamp-2">
@@ -417,6 +431,18 @@ export default function StartWithAI() {
                         <p className="text-xs text-muted-foreground mb-3">
                           {provider.category}
                         </p>
+
+                        {provider.bio ? (
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+                            {provider.bio}
+                          </p>
+                        ) : null}
+
+                        {provider.phone ? (
+                          <div className="text-sm text-muted-foreground mb-3">
+                            <span className="font-medium">Phone:</span> {provider.phone}
+                          </div>
+                        ) : null}
 
                         {/* Rating */}
                         <div className="flex items-center gap-1 mb-3">
@@ -430,16 +456,16 @@ export default function StartWithAI() {
                         </div>
 
                         {/* Details */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="space-y-2 mb-4 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="h-3 w-3" />
                             {provider.location || provider.distance}
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 text-muted-foreground">
                             <Clock className="h-3 w-3" />
                             {provider.availability}
                           </div>
-                          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                          <div className="flex items-center gap-2 font-semibold text-foreground">
                             <IndianRupee className="h-3 w-3" />
                             {provider.price}
                           </div>
